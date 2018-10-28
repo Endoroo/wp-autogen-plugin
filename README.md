@@ -1,0 +1,1 @@
+# wp-autogen-plugin
