@@ -63,8 +63,6 @@ function init() {
         jQuery('#text-after').val(settings.text_after);
         jQuery('#template').val(settings.template);
 
-        jQuery('#relink-text').val(settings.links);
-
         if (settings.images) {
           var view = jQuery('.auto-images'), form = jQuery('.upload_image'),
               html = '', html2 = '';
@@ -87,8 +85,9 @@ function init() {
   jQuery('.generate-multiply').on('click', function (e) {
     jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
-    var link = jQuery(this);
-    jQuery.post(ajaxurl, 'action=auto_generator_generate_multiply&id=' + jQuery(this).attr('data-id')).done(function (res) {
+    jQuery.post(ajaxurl, 'action=auto_generator_generate_multiply&id='
+        + jQuery(this).attr('data-id') + '&mode='
+        + jQuery('.generate-mode').val()).done(function (res) {
       res = jQuery.parseJSON(res);
       if (res.message) {
         var mes = jQuery('#message');
@@ -101,51 +100,6 @@ function init() {
       }
       jQuery('.loader').remove();
     })
-  });
-
-  // Generate by multiply only marks
-  jQuery('.generate-multiply-marks').on('click', function (e) {
-    jQuery('#wpcontent').prepend('<div class="loader"></div>');
-    e.preventDefault();
-    var link = jQuery(this);
-    jQuery.post(ajaxurl, 'action=auto_generator_generate_multiply_marks&id=' + jQuery(this).attr('data-id')).done(function (res) {
-      res = jQuery.parseJSON(res);
-      if (res.message) {
-        var mes = jQuery('#message');
-        mes.find('p').text(res.message);
-        mes.show();
-        mes.find('button').off('click');
-        mes.find('button').on('click', function () {
-          mes.hide()
-        });
-      }
-      jQuery('.loader').remove();
-    })
-  });
-
-  // Generate by multiply marks-models
-  jQuery('.generate-multiply-marks-models').on('click', function (e) {
-    jQuery('#wpcontent').prepend('<div class="loader"></div>');
-    e.preventDefault();
-    var link = jQuery(this);
-    jQuery.post(ajaxurl, 'action=auto_generator_generate_multiply_mark_models&id=' + jQuery(this).attr('data-id')).done(function (res) {
-      res = jQuery.parseJSON(res);
-      if (res.message) {
-        var mes = jQuery('#message');
-        mes.find('p').text(res.message);
-        mes.show();
-        mes.find('button').off('click');
-        mes.find('button').on('click', function () {
-          mes.hide()
-        });
-      }
-      jQuery('.loader').remove();
-    })
-  });
-
-  // Check all
-  jQuery('input[name=multiply-all]').click(function(){
-    jQuery('input[name="multiply-ids[]"]').prop('checked', jQuery(this).prop('checked'));
   });
 
   // Generate all
@@ -153,10 +107,11 @@ function init() {
     jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
     var id = [];
-    jQuery('input[name="multiply-ids[]"]:checked').each(function(){
+    jQuery('input[name="multiply-ids[]"]:checked').each(function () {
       id.push(jQuery(this).val());
     });
-    jQuery.post(ajaxurl, 'action=auto_generator_generate_multiply&id=' + id).done(function (res) {
+    jQuery.post(ajaxurl, 'action=auto_generator_generate_multiply&id=' + id
+        + '&mode=' + jQuery('.generate-mode').val()).done(function (res) {
       res = jQuery.parseJSON(res);
       if (res.message) {
         var mes = jQuery('#message');
@@ -194,7 +149,6 @@ function init() {
   jQuery('.csv-multiply').on('click', function (e) {
     jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
-    var link = jQuery(this);
     jQuery.post(ajaxurl, 'action=auto_generator_csv_multiply&id=' + jQuery(this).attr('data-id')).done(function (res) {
       res = jQuery.parseJSON(res);
       if (res.message) {
@@ -251,8 +205,7 @@ jQuery(document).ready(function () {
     jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
     jQuery.post(ajaxurl, 'action=auto_generator_save_multiply&' + jQuery(this).serialize()
-        + '&' + jQuery('.upload_image').serialize()
-        + '&' + jQuery('#add-relink').serialize()).done(function (res) {
+        + '&' + jQuery('.upload_image').serialize()).done(function (res) {
       res = jQuery.parseJSON(res);
       if (res.message) {
         var mes = jQuery('#message');
@@ -272,7 +225,6 @@ jQuery(document).ready(function () {
   jQuery('.csv-all').on('click', function (e) {
     jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
-    var link = jQuery(this);
     jQuery.post(ajaxurl, 'action=auto_generator_csv_multiply&id=0').done(function (res) {
       res = jQuery.parseJSON(res);
       if (res.message) {
@@ -288,7 +240,33 @@ jQuery(document).ready(function () {
     })
   });
 
-  init();
+  // Check all
+  jQuery('input[name=multiply-all]').on('click', function () {
+    jQuery('input[name="multiply-ids[]"]').prop('checked', jQuery(this).prop('checked'));
+  });
+
+  jQuery('.import-all').on('click', function (e) {
+    jQuery('#wpcontent').prepend('<div class="loader"></div>');
+    e.preventDefault();
+    jQuery.post(ajaxurl, 'action=auto_generator_import_multiply').done(function (res) {
+      res = jQuery.parseJSON(res);
+      if (res.message && !res.ok) {
+        var mes = jQuery('#message');
+        mes.find('p').html(res.message);
+        mes.show();
+        mes.find('button').off('click');
+        mes.find('button').on('click', function () {
+          mes.hide()
+        });
+        jQuery('.loader').remove();
+      }
+      else {
+        location.reload();
+      }
+    })
+  });
+
+  init()
 });
 
 function upload_new_img(obj) {

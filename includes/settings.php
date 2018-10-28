@@ -27,6 +27,14 @@
             <input type="submit" class="button action" value="Добавить"/>
         </form>
         <div>
+			<?php
+			$path = plugin_dir_path(__FILE__);
+			if (file_exists($path . '/../auto_generator.csv')) : ?>
+                <div>
+                    <label style="display:inline-block;width:160px">Импорт</label>
+                    <input type="submit" class="button action import-all"
+                           value="Импорт"/></div>
+			<?php endif; ?>
             <div><label style="display:inline-block;width:160px">Выгрузить все
                     страницы</label><input type="submit"
                                            class="button action csv-all"
@@ -35,11 +43,11 @@
                     страницы</label><input type="submit"
                                            class="button action generate-all"
                                            value="Генерировать"/>
-            <select name="mode" class="generate-mode">
-                <option value="1">Марки</option>
-                <option value="2">Марки-модели</option>
-                <option value="3">Марки-модели-поколения</option>
-            </select></div>
+                <select name="mode" class="generate-mode">
+                    <option value="1">Марки</option>
+                    <option value="2">Марки-модели</option>
+                    <option value="3">Марки-модели-поколения</option>
+                </select></div>
         </div>
         <div id="multiply-list">
             <div class="pager tablesorterPager">
@@ -86,13 +94,7 @@
                                    data-id="<?php echo $key ?>">Выгрузить</a>
                                 <a href="#" title="генерировать"
                                    class="generate-multiply"
-                                   data-id="<?php echo $key ?>">Ген. 1</a>
-                                <a href="#" title="генерировать"
-                                   class="generate-multiply-marks"
-                                   data-id="<?php echo $key ?>">Ген. 2</a>
-                                <a href="#" title="генерировать"
-                                   class="generate-multiply-marks-models"
-                                   data-id="<?php echo $key ?>">Ген. 3</a>
+                                   data-id="<?php echo $key ?>">Генерировать</a>
                                 <a href="#" title="загрузить параметры"
                                    class="load-multiply"
                                    data-id="<?php echo $key ?>">Загрузить</a>
@@ -127,13 +129,6 @@
 			}
 			?></div>
         <form action="#" method="post" class="upload_image"></form>
-
-        <h2>Перелинковка</h2>
-        <form action="#" method="post" id="add-relink">
-            <label for="relink-text">Введите url для перелинковки</label>
-            <textarea id="relink-text"
-                      name="relink-text"><?php echo get_option('auto_catalog_relink'); ?></textarea>
-        </form>
     </div>
     <div class="part-right">
         <form action="#" method="post" id="multiply-params">
