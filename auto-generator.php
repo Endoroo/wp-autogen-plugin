@@ -95,7 +95,7 @@ function auto_generator_meta_tags() {
 add_action('wp_head', 'auto_generator_meta_tags', 2);
 remove_action('wp_head', '_wp_render_title_tag', 1);
 
-function auto_generator_get_data($name) {
+function auto_generator_get_data($id, $name) {
 	$name = str_replace('_', ' ', $name);
 
 	$path = wp_upload_dir();
@@ -661,7 +661,7 @@ function auto_generator_csv_multiply() {
 			foreach (glob($path['basedir'] . "/ag_json/$s->name*.json") as $file) {
 				$file = file_get_contents($file);
 				$file = json_decode($file);
-				$csv .= "{$file->title};" . (get_site_url() . "/1$s->id/" . str_replace(' ', '_', $file->title)) . PHP_EOL;
+				$csv .= "{$file->title};" . (get_site_url() . "/$s->id/" . str_replace(' ', '_', $file->title)) . PHP_EOL;
 			}
 		}
 		$file = $path['basedir'] . '/part' . $id . '.csv';
@@ -713,7 +713,8 @@ function auto_generator_import_multiply() {
 				$settings->keywords = '[title]';
 				$settings->description = explode('.', $data[7]);
 				$settings->description = trim(reset($settings->description));
-				$settings->text_before = trim($data[7]);
+				$data[6] = $data[6][strlen($data[6]) - 1] != '.' ? trim($data[6]) . '.' : trim($data[6]);
+				$settings->text_before = trim($data['6'] . ' ' . $data[7]);
 				$settings->text_after = trim($data[8]);
 				$settings->template = '';
 

@@ -97,7 +97,7 @@ if (!$data) {
 					}
 					$years = implode(', ', $years);
 					echo str_replace([
-						'[name]',
+						'[auto]',
 						'[title]',
 						'[models-n-bodies]',
 						'[years]',
@@ -126,7 +126,7 @@ if (!$data) {
         <div class="part-content">
             <div class="text"><?php
 				echo str_replace([
-					'[name]',
+					'[auto]',
 					'[title]',
 					'[models-n-bodies]',
 					'[years]',
@@ -167,10 +167,10 @@ $next = json_decode(file_get_contents($path . '/' . $files[$next])); ?>
 
     <div class="re-link">
         <div>
-            <a href="<?php echo get_site_url(); ?>/1<?php echo $auto_generator_id ?>/<?php echo str_replace(' ', '_', $prev->title); ?>"><?php echo $prev->title ?></a>
+            <a href="<?php echo get_site_url(); ?>/<?php echo $auto_generator_id ?>/<?php echo str_replace(' ', '_', $prev->title); ?>"><?php echo $prev->title ?></a>
         </div>
         <div style="text-align:right"><a
-                    href="<?php echo get_site_url(); ?>/1<?php echo $auto_generator_id ?>/<?php echo str_replace(' ', '_', $next->title); ?>"><?php echo $next->title ?></a>
+                    href="<?php echo get_site_url(); ?>/<?php echo $auto_generator_id ?>/<?php echo str_replace(' ', '_', $next->title); ?>"><?php echo $next->title ?></a>
         </div>
     </div>
 
