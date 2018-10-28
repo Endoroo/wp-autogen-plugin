@@ -8,6 +8,7 @@
 function auto_generator_install() {
 	global $wpdb;
 	$settings_table = $wpdb->prefix.'ag_multiply';
+	add_option( 'auto_catalog_table', $settings_table);
 
 	if($wpdb->get_var("SHOW TABLES LIKE '$settings_table'") != $settings_table) {
 		$sql = "CREATE TABLE $settings_table (
@@ -27,16 +28,17 @@ register_activation_hook(__FILE__, 'auto_generator_install');
 function auto_generator_deactivation()
 {
 	global $wpdb;
-	foreach (array('ag_multiply') as $item)
-		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}$item" );
+	$settings_table = get_option('auto_catalog_table');
+	delete_option('auto_catalog_table');
+	$wpdb->query("DROP TABLE IF EXISTS $settings_table");
 
 	flush_rewrite_rules();
 }
-register_deactivation_hook(__FILE__, 'auto_catalog04_deactivation');
+register_deactivation_hook(__FILE__, 'auto_generator_deactivation');
 
 function auto_generator_rewrites_init() {
 	add_rewrite_rule(
-		'1(\d+)/([\d\w%\-\_\.\,]+)/?$',
+		'(\d+)/([\d\w%\-\_\.\,]+)/?$',
 		'index.php?auto_generator_id=$matches[1]&auto_generator_name=$matches[2]',
 		'top');
 	flush_rewrite_rules();
@@ -66,8 +68,8 @@ function auto_generator_meta_tags() {
 		$data = auto_generator_get_data($post->id);
 
 		$post->post_title = $data->title;
-		$keywords = str_replace(array('[name]', '[title]'), array($data->multiple, $data->title), $data->keywords);
-		$description = str_replace(array('[name]', '[title]'), array($data->multiple, $data->title), $data->description);
+		$keywords = str_replace(array('[auto]', '[title]'), array($data->multiple, $data->title), $data->keywords);
+		$description = str_replace(array('[auto]', '[title]'), array($data->multiple, $data->title), $data->description);
 		echo '<meta name="description" content="' . $description . '" />' . "\n";
 		echo '<meta name="keywords" content="' . $keywords . '" />' . "\n";
 		echo '<title>' . $data->title . '</title>' . "\n";
@@ -78,7 +80,7 @@ function auto_generator_meta_tags() {
 add_action('wp_head', 'auto_generator_meta_tags', 2);
 remove_action( 'wp_head', '_wp_render_title_tag', 1 );
 
-function auto_generator_get_data($id, $name) {
+function auto_generator_get_data($name) {
 	$name = str_replace('_', ' ', $name);
 
 	$path = wp_upload_dir();
@@ -106,7 +108,7 @@ function auto_generator_options_page_html() {
 	}
 
 	global $wpdb;
-	$settings_table = $wpdb->prefix.'ag_multiply';
+	$settings_table = get_option('auto_catalog_table');
 
 	$rows = $wpdb->get_results("SELECT * FROM $settings_table ORDER BY name");
 	$values = array();
@@ -156,7 +158,7 @@ function auto_generator_add_multiply() {
 	if (isset($_REQUEST['multiply']) && !empty($_REQUEST['multiply'])) {
 		$value = trim($_REQUEST['multiply']);
 		global $wpdb;
-		$settings_table = $wpdb->prefix.'ag_multiply';
+		$settings_table = get_option('auto_catalog_table');
 
 		$value = strpos($value, '[auto]') === false ? $value . ' [auto]' : $value;
 		$flag = $wpdb->get_results("SELECT id FROM $settings_table WHERE name LIKE '$value'");
@@ -209,7 +211,7 @@ function auto_generator_remove_multiply() {
 	if (isset($_REQUEST['multiply']) && is_numeric($_REQUEST['multiply'])) {
 		$value = trim($_REQUEST['multiply']);
 		global $wpdb;
-		$settings_table = $wpdb->prefix.'ag_multiply';
+		$settings_table = get_option('auto_catalog_table');
 
 		$wpdb->query($wpdb->prepare("DELETE FROM $settings_table WHERE id = %s", $value));
 		echo json_encode(array('message' => 'Удаление прошло успешно'));
@@ -223,7 +225,7 @@ function auto_generator_load_multiply() {
 	if (isset($_REQUEST['multiply']) && is_numeric($_REQUEST['multiply'])) {
 		$value = trim($_REQUEST['multiply']);
 		global $wpdb;
-		$settings_table = $wpdb->prefix.'ag_multiply';
+		$settings_table = get_option('auto_catalog_table');
 
 		$settings = $wpdb->get_results($wpdb->prepare("SELECT * FROM $settings_table WHERE id = %d", $value));
 		if (count($settings)) {
@@ -248,7 +250,7 @@ function auto_generator_save_multiply() {
 	if (isset($_REQUEST['multiply']) && is_numeric($_REQUEST['multiply'])) {
 		$value = trim($_REQUEST['multiply']);
 		global $wpdb;
-		$settings_table = $wpdb->prefix.'ag_multiply';
+		$settings_table = get_option('auto_catalog_table');
 
 		$settings = new stdClass();
 		$settings->links = trim($_REQUEST['relink-text']);
@@ -312,7 +314,7 @@ function auto_generator_generate_multiply($mode) {
 	if (isset($_REQUEST['id'])) {
 		$id = is_numeric($_REQUEST['id']) ? $_REQUEST['id'] : 0;
 		global $wpdb;
-		$settings_table = $wpdb->prefix.'ag_multiply';
+		$settings_table = get_option('auto_catalog_table');
 
 		$list = file_get_contents(__DIR__ . '/list.json');
 		$list = json_decode($list, 1);
@@ -444,7 +446,7 @@ function auto_generator_clear_multiply() {
 		$id = is_numeric($_REQUEST['id']) ? $_REQUEST['id'] : 0;
 
 		global $wpdb;
-		$settings_table = $wpdb->prefix.'ag_multiply';
+		$settings_table = get_option('auto_catalog_table');
 		$settings = $wpdb->get_results($wpdb->prepare("SELECT * FROM $settings_table WHERE id = %d", $id));
 		$s = array_shift($settings);
 
@@ -479,7 +481,7 @@ function auto_generator_csv_multiply() {
 		$id = trim($_REQUEST['id']);
 
 		global $wpdb;
-		$settings_table = $wpdb->prefix.'ag_multiply';
+		$settings_table = get_option('auto_catalog_table');
 		if ($id) {
 			$settings = $wpdb->get_results($wpdb->prepare("SELECT * FROM $settings_table WHERE id = %d", $id));
 		} else {
