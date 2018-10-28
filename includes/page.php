@@ -63,24 +63,35 @@ if (!$data) {
 					$list = json_decode($list, 1);
 					$list2 = file_get_contents(__DIR__ . '/../list.rus.json');
 					$list2 = json_decode($list2, 1);
-					$text = '';
-					if (array_key_exists($name, $list)) {
-						$elements = [];
-						foreach ($list[$name] as $model => $bodies) {
-							$element = $model . ' (' . implode(', ', $bodies) . ')';
-							$element = preg_replace('/\s*\(\d{4}(\-|–)(\d{4}|нв)\)/', '', $element);
-							$element = preg_replace('/\s*\(\)/', '', $element);
-							$elements[] = $element;
-						}
-						$text = implode(', ', $elements);
-					}
+					$pattern = '/\s*\(\d{4}(\-|–)(\d{4}|нв)\)/';
+                    $elements = [];
+                    foreach ($list[$name] as $model => $bodies) {
+                        $element = $model . ' (' . implode(', ', $bodies) . ')';
+                        $element = preg_replace($pattern, '', $element);
+                        $element = preg_replace('/\s*\(\)/', '', $element);
+                        $elements[] = $element;
+                    }
+                    $text = implode(', ', $elements);
+
+                    $generations = [];
+                    foreach ($list as $mark => $models) {
+                        foreach ($models as $model => $bodies) {
+                            $cut = $mark . ' ' . $model;
+                            if ($cut != $name) continue;
+                            foreach ($bodies as $body) {
+								$generations[] = preg_replace($pattern, '', $body);
+							}
+                        }
+                    }
+                    $generations = implode(',', $generations);
+
 					$years = [];
 					foreach ($list2 as $mark => $models) {
 						foreach ($models as $model => $bodies) {
 							foreach ($bodies as $body) {
 								$name2 = $mark . ' ' . $model . ' ' . $body;
 								if (stripos($name, $name2) !== FALSE) {
-									preg_match_all('/\s*\(\d{4}\-(\d{4}|нв)\)/', $name2, $patterns);
+									preg_match_all($pattern, $name2, $patterns);
 									$name = str_replace($patterns[0], '', $name2);
 									preg_match('/(\d{4})\-(\d{4}|нв)/', $patterns[0], $gates);
 									if (count($gates) != 3) {
@@ -100,11 +111,13 @@ if (!$data) {
 						'[auto]',
 						'[title]',
 						'[models-n-bodies]',
+						'[generations]',
 						'[years]',
 					], [
 						$name,
 						$data->title,
 						$text,
+						$generations,
 						$years,
 					], $data->text_before); ?>
                 </p>
@@ -129,11 +142,13 @@ if (!$data) {
 					'[auto]',
 					'[title]',
 					'[models-n-bodies]',
+					'[generations]',
 					'[years]',
 				], [
 					$name,
 					$data->title,
 					$text,
+					$generations,
 					$years,
 				], $data->text_after); ?></div>
         </div>

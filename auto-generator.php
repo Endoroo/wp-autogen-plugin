@@ -30,6 +30,8 @@ function auto_generator_deactivation() {
 	global $wpdb;
 	$settings_table = get_option('auto_catalog_table');
 	delete_option('auto_catalog_table');
+	delete_option('auto_catalog_ids');
+	delete_option('auto_catalog_time');
 	$wpdb->query("DROP TABLE IF EXISTS $settings_table");
 	$path = wp_upload_dir();
 	rmdir($path['basedir'] . '/ag_json/', 1);
@@ -493,9 +495,7 @@ function auto_generator_generate_multiply() {
 		}
 		elseif ($mode == 3) {
 			foreach ($list as $mark => $models) {
-				$mm[] = (object) ['name' => trim($mark)];
 				foreach ($models as $model => $bodies) {
-					$mm[] = (object) ['name' => trim($mark . ' ' . $model)];
 					foreach ($bodies as $body) {
 						preg_match('/\((\d{4})\-(\d{4}|нв)\)/', $body, $years);
 						if (count($years) != 3) {
