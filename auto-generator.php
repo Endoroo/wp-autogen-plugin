@@ -1,6 +1,8 @@
 <?php
 /*
- * Plugin Name: Auto Generator
+ * Plugin Name: Car-named pages Generator
+ * Plugin URI:  https://github.com/Endoroo/wp-autogen-plugin
+ * Version:     1.0
  */
 
 function auto_generator_install() {
