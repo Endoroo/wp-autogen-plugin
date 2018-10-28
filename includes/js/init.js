@@ -11,7 +11,7 @@ jQuery.browser = {};
 function init() {
   // Delete multiply
   jQuery('.remove-multiply').on('click', function (e) {
-    jQuery('.wrap').prepend('<div class="loader"></div>');
+    jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
     var link = jQuery(this);
     jQuery.post(ajaxurl, 'action=auto_generator_remove_multiply&multiply=' + jQuery(this).attr('data-id')).done(function (res) {
@@ -32,7 +32,7 @@ function init() {
 
   // Load multiply params
   jQuery('.load-multiply').on('click', function (e) {
-    jQuery('.wrap').prepend('<div class="loader"></div>');
+    jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
     var id = jQuery(this).attr('data-id');
     jQuery.post(ajaxurl, 'action=auto_generator_load_multiply&multiply=' + id).done(function (res) {
@@ -85,7 +85,7 @@ function init() {
 
   // Generate by multiply
   jQuery('.generate-multiply').on('click', function (e) {
-    jQuery('.wrap').prepend('<div class="loader"></div>');
+    jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
     var link = jQuery(this);
     jQuery.post(ajaxurl, 'action=auto_generator_generate_multiply&id=' + jQuery(this).attr('data-id')).done(function (res) {
@@ -105,7 +105,7 @@ function init() {
 
   // Generate by multiply only marks
   jQuery('.generate-multiply-marks').on('click', function (e) {
-    jQuery('.wrap').prepend('<div class="loader"></div>');
+    jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
     var link = jQuery(this);
     jQuery.post(ajaxurl, 'action=auto_generator_generate_multiply_marks&id=' + jQuery(this).attr('data-id')).done(function (res) {
@@ -125,7 +125,7 @@ function init() {
 
   // Generate by multiply marks-models
   jQuery('.generate-multiply-marks-models').on('click', function (e) {
-    jQuery('.wrap').prepend('<div class="loader"></div>');
+    jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
     var link = jQuery(this);
     jQuery.post(ajaxurl, 'action=auto_generator_generate_multiply_mark_models&id=' + jQuery(this).attr('data-id')).done(function (res) {
@@ -143,12 +143,20 @@ function init() {
     })
   });
 
+  // Check all
+  jQuery('input[name=multiply-all]').click(function(){
+    jQuery('input[name="multiply-ids[]"]').prop('checked', jQuery(this).prop('checked'));
+  });
+
   // Generate all
   jQuery('.generate-all').on('click', function (e) {
-    jQuery('.wrap').prepend('<div class="loader"></div>');
+    jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
-    var link = jQuery(this);
-    jQuery.post(ajaxurl, 'action=auto_generator_generate_multiply&id=0').done(function (res) {
+    var id = [];
+    jQuery('input[name="multiply-ids[]"]:checked').each(function(){
+      id.push(jQuery(this).val());
+    });
+    jQuery.post(ajaxurl, 'action=auto_generator_generate_multiply&id=' + id).done(function (res) {
       res = jQuery.parseJSON(res);
       if (res.message) {
         var mes = jQuery('#message');
@@ -165,9 +173,8 @@ function init() {
 
   // Delete parts by multiply
   jQuery('.clear-multiply').on('click', function (e) {
-    jQuery('.wrap').prepend('<div class="loader"></div>');
+    jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
-    var link = jQuery(this);
     jQuery.post(ajaxurl, 'action=auto_generator_clear_multiply&id=' + jQuery(this).attr('data-id')).done(function (res) {
       res = jQuery.parseJSON(res);
       if (res.message) {
@@ -185,7 +192,7 @@ function init() {
 
   // Generate csv mark & model
   jQuery('.csv-multiply').on('click', function (e) {
-    jQuery('.wrap').prepend('<div class="loader"></div>');
+    jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
     var link = jQuery(this);
     jQuery.post(ajaxurl, 'action=auto_generator_csv_multiply&id=' + jQuery(this).attr('data-id')).done(function (res) {
@@ -218,7 +225,7 @@ jQuery(document).ready(function () {
 
   // Add new multiply
   jQuery('#add-multiply').on('submit', function (e) {
-    jQuery('.wrap').prepend('<div class="loader"></div>');
+    jQuery('#wpcontent').prepend('<div class="loader"></div>');
     // http://tablesorter.com/docs/example-ajax.html
     e.preventDefault();
     jQuery.post(ajaxurl, 'action=auto_generator_add_multiply&' + jQuery(this).serialize()).done(function (res) {
@@ -241,7 +248,7 @@ jQuery(document).ready(function () {
 
   // Save multiply params
   jQuery('#multiply-params').on('submit', function (e) {
-    jQuery('.wrap').prepend('<div class="loader"></div>');
+    jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
     jQuery.post(ajaxurl, 'action=auto_generator_save_multiply&' + jQuery(this).serialize()
         + '&' + jQuery('.upload_image').serialize()
@@ -263,7 +270,7 @@ jQuery(document).ready(function () {
 
   // Generate csv all
   jQuery('.csv-all').on('click', function (e) {
-    jQuery('.wrap').prepend('<div class="loader"></div>');
+    jQuery('#wpcontent').prepend('<div class="loader"></div>');
     e.preventDefault();
     var link = jQuery(this);
     jQuery.post(ajaxurl, 'action=auto_generator_csv_multiply&id=0').done(function (res) {

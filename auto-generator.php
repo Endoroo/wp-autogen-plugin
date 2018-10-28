@@ -161,46 +161,42 @@ function auto_generator_add_multiply() {
 		$settings_table = get_option('auto_catalog_table');
 
 		$value = strpos($value, '[auto]') === false ? $value . ' [auto]' : $value;
-		$flag = $wpdb->get_results("SELECT id FROM $settings_table WHERE name LIKE '$value'");
-		if (!count($flag)) {
-			$wpdb->insert($settings_table, array(
-				'name' => $value
-			));
-			$result = $wpdb->get_var("SELECT COUNT(*) FROM $settings_table;");
-			echo json_encode(array(
-				'message' => 'Добавление прошло успешно',
-				'add' => "<tr>
-	<td>$result</td>
-	<td><input type='checkbox' name='multiply-ids[]' value='{$wpdb->insert_id}'></td>
-	<td>
-		<div class='title'>$value</div>
-		<div class='links'>
-			<a href='#' title='выгрузить'
-			   class='csv-multiply'
-			   data-id='{$wpdb->insert_id}'>Выгрузить</a>
-			<a href='#' title='генерировать'
-			   class='generate-multiply'
-			   data-id='{$wpdb->insert_id}'>Ген. 1</a>
-			<a href='#' title='генерировать'
-			   class='generate-multiply-marks'
-			   data-id='{$wpdb->insert_id}'>Ген. 2</a>
-			<a href='#' title='генерировать'
-			   class='generate-multiply-marks-models'
-			   data-id='{$wpdb->insert_id}'>Ген. 3</a>
-			<a href='#' title='загрузить параметры'
-			   class='load-multiply'
-			   data-id='{$wpdb->insert_id}'>Загрузить</a>
-			<a href='#' title='удалить позицию'
-			   class='remove-multiply'
-			   data-id='{$wpdb->insert_id}'>Удалить</a>
-			<a href='#' title='удалить страницы'
-			   class='clear-multiply'
-			   data-id='{$wpdb->insert_id}'>Удалить страницы</a>
-		</div>
-	</td></tr>"
-			));
-		} else
-			echo json_encode(array('message' => 'Такая запись уже существует'));
+		$wpdb->insert($settings_table, array(
+			'name' => $value
+		));
+		$result = $wpdb->get_var("SELECT COUNT(*) FROM $settings_table;");
+		echo json_encode(array(
+			'message' => 'Добавление прошло успешно',
+			'add' => "<tr>
+<td>$result</td>
+<td><input type='checkbox' name='multiply-ids[]' value='{$wpdb->insert_id}'></td>
+<td>
+	<div class='title'>$value</div>
+	<div class='links'>
+		<a href='#' title='выгрузить'
+		   class='csv-multiply'
+		   data-id='{$wpdb->insert_id}'>Выгрузить</a>
+		<a href='#' title='генерировать'
+		   class='generate-multiply'
+		   data-id='{$wpdb->insert_id}'>Ген. 1</a>
+		<a href='#' title='генерировать'
+		   class='generate-multiply-marks'
+		   data-id='{$wpdb->insert_id}'>Ген. 2</a>
+		<a href='#' title='генерировать'
+		   class='generate-multiply-marks-models'
+		   data-id='{$wpdb->insert_id}'>Ген. 3</a>
+		<a href='#' title='загрузить параметры'
+		   class='load-multiply'
+		   data-id='{$wpdb->insert_id}'>Загрузить</a>
+		<a href='#' title='удалить позицию'
+		   class='remove-multiply'
+		   data-id='{$wpdb->insert_id}'>Удалить</a>
+		<a href='#' title='удалить страницы'
+		   class='clear-multiply'
+		   data-id='{$wpdb->insert_id}'>Удалить страницы</a>
+	</div>
+</td></tr>"
+		));
 	} else
 		echo json_encode(array('message' => 'Произошла ошибка при добавлении'));
 	wp_die();
@@ -312,9 +308,17 @@ if (!function_exists('transliteration')) {
 function auto_generator_generate_multiply($mode) {
 	$mode = empty($mode) ? 3 : $mode;
 	if (isset($_REQUEST['id'])) {
-		$id = is_numeric($_REQUEST['id']) ? $_REQUEST['id'] : 0;
+		$id = sanitize_text_field($_REQUEST['id']);
+		$id = explode(',',$id);
+		if (!count($id)) {
+			echo json_encode(array('message' => 'Произошла ошибка при генерации'));
+			wp_die();
+		}
+
 		global $wpdb;
 		$settings_table = get_option('auto_catalog_table');
+		$id = implode(',',$id);
+		$settings = $wpdb->get_results("SELECT * FROM $settings_table WHERE id IN ($id)");
 
 		$list = file_get_contents(__DIR__ . '/list.json');
 		$list = json_decode($list, 1);
@@ -345,11 +349,6 @@ function auto_generator_generate_multiply($mode) {
 				}
 			}
 		}
-
-		if ($id)
-			$settings = $wpdb->get_results($wpdb->prepare("SELECT * FROM $settings_table WHERE id = %d", $id));
-		else
-			$settings = $wpdb->get_results("SELECT * FROM $settings_table");
 
 		$count = 0;
 		if (count($settings) && count($mm)) {
@@ -421,12 +420,15 @@ function auto_generator_generate_multiply($mode) {
 				}
 			}
 		}
-		if ($count)
+		if ($count) {
 			echo json_encode(array('message' => 'Генерация прошла успешно. Сгенерировано '.$count.' постов'));
-		else
+		}
+		else {
 			echo json_encode(array('message' => 'Генерировать больше нечего'));
-	} else
-		echo json_encode(array('message' => 'Произошла ошибка при генерации'));
+		}
+	} else {
+		echo json_encode(['message' => 'Произошла ошибка при генерации']);
+	}
 	wp_die();
 }
 add_action('wp_ajax_auto_generator_generate_multiply', 'auto_generator_generate_multiply');

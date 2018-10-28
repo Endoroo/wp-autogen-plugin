@@ -34,7 +34,12 @@
             <div><label style="display:inline-block;width:160px">Генерировать
                     страницы</label><input type="submit"
                                            class="button action generate-all"
-                                           value="Генерировать"/></div>
+                                           value="Генерировать"/>
+            <select name="mode" class="generate-mode">
+                <option value="1">Марки</option>
+                <option value="2">Марки-модели</option>
+                <option value="3">Марки-модели-поколения</option>
+            </select></div>
         </div>
         <div id="multiply-list">
             <div class="pager tablesorterPager">
@@ -60,7 +65,7 @@
                 <tr>
                     <th data-sorter="false">№</th>
                     <th data-sorter="false"><input type="checkbox"
-                                                   name="multiply[]"
+                                                   name="multiply-all"
                                                    value="all"></th>
                     <th>Множитель</th>
                 </tr>
