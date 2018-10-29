@@ -1,5 +1,10 @@
 <?php
 get_header();
+$realName = explode('/', $_SERVER['REQUEST_URI']);
+$realName = end($realName);
+if ($realName != $auto_generator_name) {
+	$auto_generator_name = $realName;
+}
 $data = auto_generator_get_data($auto_generator_id, urldecode($auto_generator_name));
 
 if (!$data) {
@@ -66,12 +71,14 @@ if (!$data) {
 					$pattern = '/\s*\(\d{4}(\-|–)(\d{4}|нв)\)/';
 
                     $elements = array();
-                    foreach ($list[$name] as $model => $bodies) {
-                        $element = $model . ' (' . implode(', ', $bodies) . ')';
-                        $element = preg_replace($pattern, '', $element);
-                        $element = preg_replace('/\s*\(\)/', '', $element);
-                        $elements[] = $element;
-                    }
+                    if (isset($list[$name])) {
+						foreach ($list[$name] as $model => $bodies) {
+							$element = $model . ' (' . implode(', ', $bodies) . ')';
+							$element = preg_replace($pattern, '', $element);
+							$element = preg_replace('/\s*\(\)/', '', $element);
+							$elements[] = $element;
+						}
+					}
                     $text = implode(', ', $elements);
 
                     $generations = array();

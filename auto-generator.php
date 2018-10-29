@@ -44,7 +44,7 @@ register_deactivation_hook(__FILE__, 'auto_generator_deactivation');
 
 function auto_generator_rewrites_init() {
 	add_rewrite_rule(
-		'(\d+)/([\d\w%\-\_\.\,!\?]+)/?$',
+		'(\d+)/([\d\w%\-\_\.\,!\/\?%3F]+)/?$',
 		'index.php?auto_generator_id=$matches[1]&auto_generator_name=$matches[2]',
 		'top');
 	flush_rewrite_rules();
@@ -64,9 +64,6 @@ function auto_generator_rewrite_templates() {
 	if (($id = get_query_var('auto_generator_id'))
 		&& ($name = get_query_var('auto_generator_name'))) {
 		add_filter('template_include', function () {
-
-			global $post;
-			$post->type = 'auto-generator';
 			return plugin_dir_path(__FILE__) . '/includes/page.php';
 		});
 	}
@@ -129,7 +126,7 @@ function auto_generator_options_page_html() {
 	global $wpdb;
 	$settings_table = get_option('auto_catalog_table');
 
-	$rows = $wpdb->get_results("SELECT * FROM $settings_table ORDER BY name");
+	$rows = $wpdb->get_results("SELECT * FROM $settings_table ORDER BY id");
 	$values = array();
 	foreach ($rows as $row) {
 		$values[$row->id] = $row->name;
@@ -182,7 +179,7 @@ function auto_generator_add_multiply() {
 
 		$value = strpos($value, '[auto]') === FALSE ? $value . ' [auto]' : $value;
 		$wpdb->insert($settings_table, [
-			'name' => $value,
+			'name' => str_replace('?', '', $value)
 		]);
 		$result = $wpdb->get_var("SELECT COUNT(*) FROM $settings_table;");
 		echo json_encode([
@@ -467,6 +464,7 @@ function auto_generator_generate_multiply() {
 						'template' => $s->template,
 						'art' => $art,
 						'date' => mt_rand(strtotime($s->date_from), strtotime($s->date_to)),
+						'url' => (get_site_url() . "/$item->id/" . str_replace(' ', '_', $title)) . '/'
 					);
 
 					$files = array();
@@ -474,6 +472,7 @@ function auto_generator_generate_multiply() {
 						$id = get_attached_file($key);
 						$ext = explode('.', $id);
 						$ext = end($ext);
+						$title = str_replace(array('?', ' '), array('', '_'), $title);
 						$base = '/ag_images/' . $title . '-' . $key . str_pad(mt_rand(0, 99999999), 8, STR_PAD_BOTH) . '.' . $ext;
 						$file = $path['basedir'] . $base;
 						$files[] = $path['baseurl'] . $base;
@@ -563,7 +562,8 @@ function auto_generator_csv_multiply() {
 			foreach (glob($path['basedir'] . "/ag_json/$s->name*.json") as $file) {
 				$file = file_get_contents($file);
 				$file = json_decode($file);
-				$csv .= "{$file->title};" . (get_site_url() . "/$s->id/" . str_replace(' ', '_', $file->title)) . PHP_EOL;
+				$file->url = $file->url[strlen($file->url) - 1] != '/' ? $file->url . '/' : $file->url;
+				$csv .= "{$file->title};{$file->url}" . PHP_EOL;
 			}
 		}
 		$file = $path['basedir'] . '/part' . $id . '.csv';
