@@ -64,6 +64,9 @@ function auto_generator_rewrite_templates() {
 	if (($id = get_query_var('auto_generator_id'))
 		&& ($name = get_query_var('auto_generator_name'))) {
 		add_filter('template_include', function () {
+
+			global $post;
+			$post->type = 'auto-generator';
 			return plugin_dir_path(__FILE__) . '/includes/page.php';
 		});
 	}
@@ -72,11 +75,10 @@ function auto_generator_rewrite_templates() {
 add_action('template_redirect', 'auto_generator_rewrite_templates');
 
 function auto_generator_meta_tags() {
-	global $post;
-	if ($post->post_type == 'auto-generator') {
-		$data = auto_generator_get_data($post->id);
+	if (($id = get_query_var('auto_generator_id'))
+		&& ($name = get_query_var('auto_generator_name'))) {
+		$data = auto_generator_get_data($id, urldecode($name));
 
-		$post->post_title = $data->title;
 		$keywords = str_replace(['[auto]', '[title]'], [
 			$data->multiple,
 			$data->title,
@@ -128,7 +130,7 @@ function auto_generator_options_page_html() {
 	$settings_table = get_option('auto_catalog_table');
 
 	$rows = $wpdb->get_results("SELECT * FROM $settings_table ORDER BY name");
-	$values = [];
+	$values = array();
 	foreach ($rows as $row) {
 		$values[$row->id] = $row->name;
 	}
@@ -287,7 +289,7 @@ function auto_generator_save_multiply() {
 		$settings->text_after = trim($_REQUEST['text-after']);
 		$settings->template = isset($_REQUEST['template']) ? trim($_REQUEST['template']) : '';
 		if ($_REQUEST['images'] && $_REQUEST['ids']) {
-			$images = [];
+			$images = array();
 			foreach ($_REQUEST['ids'] as $key => $id) {
 				if (is_numeric($id)) {
 					$images[$id] = $_REQUEST['images'][$key];
@@ -316,144 +318,18 @@ add_action('wp_ajax_auto_generator_save_multiply', 'auto_generator_save_multiply
 
 if (!function_exists('transliteration')) {
 	function transliteration($str) {
-		$cyr = [
-			'а',
-			'б',
-			'в',
-			'г',
-			'д',
-			'е',
-			'ё',
-			'ж',
-			'з',
-			'и',
-			'й',
-			'к',
-			'л',
-			'м',
-			'н',
-			'о',
-			'п',
-			'р',
-			'с',
-			'т',
-			'у',
-			'ф',
-			'х',
-			'ц',
-			'ч',
-			'ш',
-			'щ',
-			'ъ',
-			'ы',
-			'ь',
-			'э',
-			'ю',
-			'я',
-			'А',
-			'Б',
-			'В',
-			'Г',
-			'Д',
-			'Е',
-			'Ё',
-			'Ж',
-			'З',
-			'И',
-			'Й',
-			'К',
-			'Л',
-			'М',
-			'Н',
-			'О',
-			'П',
-			'Р',
-			'С',
-			'Т',
-			'У',
-			'Ф',
-			'Х',
-			'Ц',
-			'Ч',
-			'Ш',
-			'Щ',
-			'Ъ',
-			'Ы',
-			'Ь',
-			'Э',
-			'Ю',
-			'Я',
-			'/',
-		];
-		$lat = [
-			'a',
-			'b',
-			'v',
-			'g',
-			'd',
-			'e',
-			'io',
-			'zh',
-			'z',
-			'i',
-			'y',
-			'k',
-			'l',
-			'm',
-			'n',
-			'o',
-			'p',
-			'r',
-			's',
-			't',
-			'u',
-			'f',
-			'h',
-			'ts',
-			'ch',
-			'sh',
-			'sht',
-			'a',
-			'i',
-			'y',
-			'e',
-			'yu',
-			'ya',
-			'A',
-			'B',
-			'V',
-			'G',
-			'D',
-			'E',
-			'Io',
-			'Zh',
-			'Z',
-			'I',
-			'Y',
-			'K',
-			'L',
-			'M',
-			'N',
-			'O',
-			'P',
-			'R',
-			'S',
-			'T',
-			'U',
-			'F',
-			'H',
-			'Ts',
-			'Ch',
-			'Sh',
-			'Sht',
-			'A',
-			'I',
-			'Y',
-			'e',
-			'Yu',
-			'Ya',
-			'-',
-		];
+		$cyr = array(
+			'а','б','в','г','д','е','ё','ж','з','и','й','к','л','м','н','о','п',
+			'р','с','т','у','ф','х','ц','ч','ш','щ','ъ','ы','ь','э','ю','я',
+			'А','Б','В','Г','Д','Е','Ё','Ж','З','И','Й','К','Л','М','Н','О','П',
+			'Р','С','Т','У','Ф','Х','Ц','Ч','Ш','Щ','Ъ','Ы','Ь','Э','Ю','Я', '/'
+		);
+		$lat = array(
+			'a','b','v','g','d','e','io','zh','z','i','y','k','l','m','n','o','p',
+			'r','s','t','u','f','h','ts','ch','sh','sht','a','i','y','e','yu','ya',
+			'A','B','V','G','D','E','Io','Zh','Z','I','Y','K','L','M','N','O','P',
+			'R','S','T','U','F','H','Ts','Ch','Sh','Sht','A','I','Y','e','Yu','Ya', '-'
+		);
 		$res = str_replace($cyr, $lat, $str);
 		$res = str_replace(" ", "-", strtolower($res));
 
@@ -480,7 +356,7 @@ function auto_generator_generate_multiply() {
 		$list = json_decode($list, 1);
 		$listRu = file_get_contents(__DIR__ . '/list.rus.json');
 		$listRu = json_decode($listRu, 1);
-		$mm = [];
+		$mm = array();
 		if ($mode == 1) {
 			$list = array_keys($list);
 			foreach ($list as $item) {
@@ -546,7 +422,7 @@ function auto_generator_generate_multiply() {
 
 			// add generation for non exist
 			$files = list_files($path['basedir'] . '/ag_json');
-			$titles = [];
+			$titles = array();
 			foreach ($files as $file) {
 				$file = pathinfo($file);
 				$titles[$file['filename']] = $file['filename'];
@@ -564,7 +440,7 @@ function auto_generator_generate_multiply() {
 						continue;
 					}
 
-					$chars = ['A', 'N', 'R', 'T', 'X', 'W', 'P', 'Q', 'V', 'S'];
+					$chars = array('A', 'N', 'R', 'T', 'X', 'W', 'P', 'Q', 'V', 'S');
 					$art = '';
 					foreach (str_split(strval(mt_rand(10000, 99999))) as $char) {
 						$art .= $chars[$char];
@@ -580,7 +456,7 @@ function auto_generator_generate_multiply() {
 							break;
 						}
 					}
-					$post = [
+					$post = array(
 						'title' => $title,
 						'multiple' => $item->name,
 						'price' => $price1[array_rand($price1)] . ' - ' . $price2[array_rand($price2)],
@@ -591,9 +467,9 @@ function auto_generator_generate_multiply() {
 						'template' => $s->template,
 						'art' => $art,
 						'date' => mt_rand(strtotime($s->date_from), strtotime($s->date_to)),
-					];
+					);
 
-					$files = [];
+					$files = array();
 					foreach ($s->images as $key => $id) {
 						$id = get_attached_file($key);
 						$ext = explode('.', $id);

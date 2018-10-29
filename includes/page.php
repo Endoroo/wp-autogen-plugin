@@ -65,7 +65,7 @@ if (!$data) {
 					$listRu = json_decode($listRu, 1);
 					$pattern = '/\s*\(\d{4}(\-|–)(\d{4}|нв)\)/';
 
-                    $elements = [];
+                    $elements = array();
                     foreach ($list[$name] as $model => $bodies) {
                         $element = $model . ' (' . implode(', ', $bodies) . ')';
                         $element = preg_replace($pattern, '', $element);
@@ -74,7 +74,7 @@ if (!$data) {
                     }
                     $text = implode(', ', $elements);
 
-                    $generations = [];
+                    $generations = array();
                     foreach ($list as $mark => $models) {
                         foreach ($models as $model => $bodies) {
                             $cut = $mark . ' ' . $model;
@@ -86,7 +86,7 @@ if (!$data) {
                     }
                     $generations = implode(',', $generations);
 
-                    $years = [];
+                    $years = array();
 					foreach ($list as $mark => $models) {
 						foreach ($models as $model => $bodies) {
 							foreach ($bodies as $body) {
@@ -110,7 +110,7 @@ if (!$data) {
 					$years = implode(', ', $years);
 
 					if (!$generations) {
-						$generations = [];
+						$generations = array();
 						foreach ($listRu as $mark => $models) {
 							foreach ($models as $model => $bodies) {
 								$cut = $mark . ' ' . $model;
@@ -126,7 +126,7 @@ if (!$data) {
 					}
 
 					if (!$years) {
-						$years = [];
+						$years = array();
 						foreach ($listRu as $mark => $models) {
 							foreach ($models as $model => $bodies) {
 								foreach ($bodies as $body) {
