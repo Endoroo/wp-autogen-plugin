@@ -462,7 +462,7 @@ if (!function_exists('transliteration')) {
 }
 
 function auto_generator_generate_multiply() {
-	$mode = empty($_REQUEST['mode']) ? 3 : (int)$_REQUEST['mode'];
+	$mode = empty($_REQUEST['mode']) ? 1 : (int)$_REQUEST['mode'];
 	if (isset($_REQUEST['id'])) {
 		$id = sanitize_text_field($_REQUEST['id']);
 		$id = explode(',', $id);
@@ -478,6 +478,8 @@ function auto_generator_generate_multiply() {
 
 		$list = file_get_contents(__DIR__ . '/list.json');
 		$list = json_decode($list, 1);
+		$listRu = file_get_contents(__DIR__ . '/list.rus.json');
+		$listRu = json_decode($list, 1);
 		$mm = [];
 		if ($mode == 1) {
 			$list = array_keys($list);
@@ -495,6 +497,28 @@ function auto_generator_generate_multiply() {
 		}
 		elseif ($mode == 3) {
 			foreach ($list as $mark => $models) {
+				foreach ($models as $model => $bodies) {
+					foreach ($bodies as $body) {
+						preg_match('/\((\d{4})\-(\d{4}|нв)\)/', $body, $years);
+						if (count($years) != 3) {
+							continue;
+						}
+						$body = trim(str_replace($years[0], '', $body));
+						$mm[] = (object) ['name' => trim($mark . ' ' . $model . ' ' . $body)];
+					}
+				}
+			}
+		}
+		elseif ($mode == 4) {
+			foreach ($listRu as $mark => $models) {
+				$models = array_keys($models);
+				foreach ($models as $model) {
+					$mm[] = (object) ['name' => $mark . ' ' . $model];
+				}
+			}
+		}
+		elseif ($mode == 5) {
+			foreach ($listRu as $mark => $models) {
 				foreach ($models as $model => $bodies) {
 					foreach ($bodies as $body) {
 						preg_match('/\((\d{4})\-(\d{4}|нв)\)/', $body, $years);
