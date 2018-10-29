@@ -44,7 +44,7 @@ register_deactivation_hook(__FILE__, 'auto_generator_deactivation');
 
 function auto_generator_rewrites_init() {
 	add_rewrite_rule(
-		'(\d+)/([\d\w%\-\_\.\,]+)/?$',
+		'(\d+)/([\d\w%\-\_\.\,!\?]+)/?$',
 		'index.php?auto_generator_id=$matches[1]&auto_generator_name=$matches[2]',
 		'top');
 	flush_rewrite_rules();
@@ -648,9 +648,11 @@ function auto_generator_clear_multiply() {
 			$content = json_decode($content);
 			$images = $content->images;
 
-			foreach ($images as $file) {
-				if (is_file($file)) {
-					unlink($file);
+			foreach ($images as $image) {
+				$image = explode('ag_images/',$image);
+				$image = $path['basedir'] . '/ag_images/' . end($image);
+				if (file_exists($image)) {
+					unlink($image);
 				}
 			}
 		}
