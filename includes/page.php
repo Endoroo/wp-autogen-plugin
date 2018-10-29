@@ -61,9 +61,10 @@ if (!$data) {
 
 					$list = file_get_contents(__DIR__ . '/../list.json');
 					$list = json_decode($list, 1);
-					$list2 = file_get_contents(__DIR__ . '/../list.rus.json');
-					$list2 = json_decode($list2, 1);
+					$listRu = file_get_contents(__DIR__ . '/../list.rus.json');
+					$listRu = json_decode($listRu, 1);
 					$pattern = '/\s*\(\d{4}(\-|–)(\d{4}|нв)\)/';
+
                     $elements = [];
                     foreach ($list[$name] as $model => $bodies) {
                         $element = $model . ' (' . implode(', ', $bodies) . ')';
@@ -85,8 +86,8 @@ if (!$data) {
                     }
                     $generations = implode(',', $generations);
 
-					$years = [];
-					foreach ($list2 as $mark => $models) {
+                    $years = [];
+					foreach ($list as $mark => $models) {
 						foreach ($models as $model => $bodies) {
 							foreach ($bodies as $body) {
 								$name2 = $mark . ' ' . $model . ' ' . $body;
@@ -107,6 +108,48 @@ if (!$data) {
 						}
 					}
 					$years = implode(', ', $years);
+
+					if (!$generations) {
+						$generations = [];
+						foreach ($listRu as $mark => $models) {
+							foreach ($models as $model => $bodies) {
+								$cut = $mark . ' ' . $model;
+								if ($cut != $name) {
+									continue;
+								}
+								foreach ($bodies as $body) {
+									$generations[] = preg_replace($pattern, '', $body);
+								}
+							}
+						}
+						$generations = implode(',', $generations);
+					}
+
+					if (!$years) {
+						$years = [];
+						foreach ($listRu as $mark => $models) {
+							foreach ($models as $model => $bodies) {
+								foreach ($bodies as $body) {
+									$name2 = $mark . ' ' . $model . ' ' . $body;
+									if (stripos($name, $name2) !== FALSE) {
+										preg_match_all($pattern, $name2, $patterns);
+										$name = str_replace($patterns[0], '', $name2);
+										preg_match('/(\d{4})\-(\d{4}|нв)/', $patterns[0], $gates);
+										if (count($gates) != 3) {
+											continue;
+										}
+										$gates[2] = $gates[2] == 'нв' ? date('Y') : $gates[2];
+										$gates = range($gates[1], $gates[2]);
+										foreach ($gates as $year) {
+											$years[$year] = $year;
+										}
+									}
+								}
+							}
+						}
+						$years = implode(', ', $years);
+					}
+
 					echo str_replace([
 						'[auto]',
 						'[title]',

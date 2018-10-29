@@ -479,7 +479,7 @@ function auto_generator_generate_multiply() {
 		$list = file_get_contents(__DIR__ . '/list.json');
 		$list = json_decode($list, 1);
 		$listRu = file_get_contents(__DIR__ . '/list.rus.json');
-		$listRu = json_decode($list, 1);
+		$listRu = json_decode($listRu, 1);
 		$mm = [];
 		if ($mode == 1) {
 			$list = array_keys($list);

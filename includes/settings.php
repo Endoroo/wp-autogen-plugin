@@ -47,8 +47,8 @@
                     <option value="1">Марки</option>
                     <option value="2">Марки-модели</option>
                     <option value="3">Марки-модели-поколения</option>
-                    <option value="3">Марки-модели с переводом</option>
-                    <option value="4">Марки-модели-поколения с переводом</option>
+                    <option value="4">Марки-модели с переводом</option>
+                    <option value="5">Марки-модели-поколения с переводом</option>
                 </select></div>
         </div>
         <div id="multiply-list">
