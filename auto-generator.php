@@ -44,7 +44,7 @@ register_deactivation_hook(__FILE__, 'auto_generator_deactivation');
 
 function auto_generator_rewrites_init() {
 	add_rewrite_rule(
-		'(\d+)/([\d\w%\-\_\.\,!\/\?%3F]+)/?$',
+		'(\d+)/([\d\w%\-\_\.\,!\(\)]+)/?$',
 		'index.php?auto_generator_id=$matches[1]&auto_generator_name=$matches[2]',
 		'top');
 	flush_rewrite_rules();
@@ -77,11 +77,11 @@ function auto_generator_meta_tags() {
 		$data = auto_generator_get_data($id, urldecode($name));
 
 		$keywords = str_replace(['[auto]', '[title]'], [
-			$data->multiple,
+			$data->auto,
 			$data->title,
 		], $data->keywords);
 		$description = str_replace(['[auto]', '[title]'], [
-			$data->multiple,
+			$data->auto,
 			$data->title,
 		], $data->description);
 		echo '<meta name="description" content="' . $description . '" />' . "\n";
@@ -100,9 +100,23 @@ function auto_generator_get_data($id, $name) {
 	$name = str_replace('_', ' ', $name);
 
 	$path = wp_upload_dir();
-	$path = $path['basedir'] . '/ag_json/' . $name . '.json';
-	if (file_exists($path)) {
-		return json_decode(file_get_contents($path));
+	$name = str_replace(array('?', ' '), array('', '_'), $name);
+	$path = $path['basedir'] . '/ag_json/' . str_replace('?', '', $name) . '.json';
+	if (file_exists($path) && is_numeric($id)) {
+		$data = json_decode(file_get_contents($path));
+		global $wpdb;
+		$settings_table = get_option('auto_catalog_table');
+		$id = (int)$id;
+		$result = $wpdb->get_col("SELECT name FROM $settings_table WHERE id =$id");
+		$multiple = reset($result);
+		$multiple = explode('[auto]', $multiple);
+		$name = $data->title;
+		foreach ($multiple as $m) {
+			$name = str_replace($m, '', $name);
+		}
+		$data->multiple = reset($result);
+		$data->auto = $name;
+		return $data;
 	}
 
 	return FALSE;
@@ -464,15 +478,15 @@ function auto_generator_generate_multiply() {
 						'template' => $s->template,
 						'art' => $art,
 						'date' => mt_rand(strtotime($s->date_from), strtotime($s->date_to)),
-						'url' => (get_site_url() . "/$item->id/" . str_replace(' ', '_', $title)) . '/'
+						'url' => (get_site_url() . "/$item->id/" . str_replace(array('?', ' '), array('', '_'), $title)) . '/'
 					);
 
 					$files = array();
+					$title = str_replace(array('?', ' '), array('', '_'), $title);
 					foreach ($s->images as $key => $id) {
 						$id = get_attached_file($key);
 						$ext = explode('.', $id);
 						$ext = end($ext);
-						$title = str_replace(array('?', ' '), array('', '_'), $title);
 						$base = '/ag_images/' . $title . '-' . $key . str_pad(mt_rand(0, 99999999), 8, STR_PAD_BOTH) . '.' . $ext;
 						$file = $path['basedir'] . $base;
 						$files[] = $path['baseurl'] . $base;
@@ -558,7 +572,7 @@ function auto_generator_csv_multiply() {
 
 		$csv = "title;url" . PHP_EOL;
 		foreach ($settings as $s) {
-			$s->name = str_replace('[auto]', '*', $s->name);
+			$s->name = str_replace(array('?', '[auto]', ' '), array('', '*', '_'), $s->name);
 			foreach (glob($path['basedir'] . "/ag_json/$s->name*.json") as $file) {
 				$file = file_get_contents($file);
 				$file = json_decode($file);
@@ -622,7 +636,7 @@ function auto_generator_import_multiply() {
 
 				$wpdb->insert($settings_table, [
 					'id' => $id,
-					'name' => $name,
+					'name' => str_replace('?', '', $name),
 					'settings' => json_encode($settings),
 				]);
 			}

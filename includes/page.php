@@ -1,5 +1,15 @@
 <?php
+// remove all-in-one-seo tags
+ob_start();
 get_header();
+$header = ob_get_contents();
+ob_end_clean();
+$header = preg_split('/<!\-\-\s*\/all\s*in\s*one\s*seo\s*pack\s*\-\->/', $header);
+$header[0] = preg_split('/<!\-\-\s*/', $header[0]);
+$header[0] = $header[0][0];
+$header = implode('',$header);
+echo $header;
+
 $realName = explode('/', $_SERVER['REQUEST_URI']);
 $realName = end($realName);
 if ($realName != $auto_generator_name) {
@@ -91,7 +101,7 @@ if (!$data) {
 							}
                         }
                     }
-                    $generations = implode(',', $generations);
+                    $generations = implode(', ', $generations);
 
                     $years = array();
 					foreach ($list as $mark => $models) {
@@ -129,7 +139,7 @@ if (!$data) {
 								}
 							}
 						}
-						$generations = implode(',', $generations);
+						$generations = implode(', ', $generations);
 					}
 
 					if (!$years) {
