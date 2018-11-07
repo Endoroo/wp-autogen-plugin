@@ -108,7 +108,7 @@ if (!$data) {
 						foreach ($models as $model => $bodies) {
 							foreach ($bodies as $body) {
 								$name2 = $mark . ' ' . $model . ' ' . $body;
-								if (stripos($name, $name2) !== FALSE) {
+								if (stripos($name2, $name) !== FALSE) {
 									preg_match_all($pattern, $name2, $patterns);
 									$name = str_replace($patterns[0][0], '', $name2);
 									preg_match('/(\d{4})\-(\d{4}|нв)/', $patterns[0][0], $gates);
@@ -148,7 +148,7 @@ if (!$data) {
 							foreach ($models as $model => $bodies) {
 								foreach ($bodies as $body) {
 									$name2 = $mark . ' ' . $model . ' ' . $body;
-									if (stripos($name, $name2) !== FALSE) {
+									if (stripos($name2, $name) !== FALSE) {
 										preg_match_all($pattern, $name2, $patterns);
 										$name = str_replace($patterns[0], '', $name2);
 										preg_match('/(\d{4})\-(\d{4}|нв)/', $patterns[0], $gates);
