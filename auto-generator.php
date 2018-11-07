@@ -44,7 +44,7 @@ register_deactivation_hook(__FILE__, 'auto_generator_deactivation');
 
 function auto_generator_rewrites_init() {
 	add_rewrite_rule(
-		'(\d+)/([\d\w%\-\_\.\,!\(\)]+)/?$',
+		'(\d+)/([\d\w%\-\_\.\,\(\)]+)/?$',
 		'index.php?auto_generator_id=$matches[1]&auto_generator_name=$matches[2]',
 		'top');
 	flush_rewrite_rules();
@@ -84,6 +84,7 @@ function auto_generator_meta_tags() {
 			$data->auto,
 			$data->title,
 		], $data->description);
+
 		echo '<meta name="description" content="' . $description . '" />' . "\n";
 		echo '<meta name="keywords" content="' . $keywords . '" />' . "\n";
 		echo '<title>' . $data->title . '</title>' . "\n";
@@ -100,8 +101,8 @@ function auto_generator_get_data($id, $name) {
 	$name = str_replace('_', ' ', $name);
 
 	$path = wp_upload_dir();
-	$name = str_replace(array('?', ' '), array('', '_'), $name);
-	$path = $path['basedir'] . '/ag_json/' . str_replace('?', '', $name) . '.json';
+	$name = str_replace(' ', '_', $name);
+	$path = $path['basedir'] . '/ag_json/' . $name . '.json';
 	if (file_exists($path) && is_numeric($id)) {
 		$data = json_decode(file_get_contents($path));
 		global $wpdb;
@@ -193,7 +194,7 @@ function auto_generator_add_multiply() {
 
 		$value = strpos($value, '[auto]') === FALSE ? $value . ' [auto]' : $value;
 		$wpdb->insert($settings_table, [
-			'name' => str_replace('?', '', $value)
+			'name' => str_replace(array('?', '!'), array('', ''), $value)
 		]);
 		$result = $wpdb->get_var("SELECT COUNT(*) FROM $settings_table;");
 		echo json_encode([
@@ -478,11 +479,11 @@ function auto_generator_generate_multiply() {
 						'template' => $s->template,
 						'art' => $art,
 						'date' => mt_rand(strtotime($s->date_from), strtotime($s->date_to)),
-						'url' => (get_site_url() . "/$item->id/" . str_replace(array('?', ' '), array('', '_'), $title)) . '/'
+						'url' => (get_site_url() . "/$item->id/" . str_replace(array('?', '!', ' '), array('', '', '_'), $title)) . '/'
 					);
 
 					$files = array();
-					$title = str_replace(array('?', ' '), array('', '_'), $title);
+					$title = str_replace(array('?', '!', ' '), array('', '', '_'), $title);
 					foreach ($s->images as $key => $id) {
 						$id = get_attached_file($key);
 						$ext = explode('.', $id);
@@ -556,6 +557,27 @@ function auto_generator_clear_multiply() {
 
 add_action('wp_ajax_auto_generator_clear_multiply', 'auto_generator_clear_multiply');
 
+function auto_generator_clear_all() {
+	$path = wp_upload_dir();
+	foreach (glob($path['basedir'] . '/ag_json/*.json') as $file) {
+		$content = file_get_contents($file);
+		if (file_exists($file)) {
+			unlink($file);
+		}
+		$content = json_decode($content);
+		$images = $content->images;
+
+		foreach ($images as $image) {
+			$image = explode('ag_images/',$image);
+			$image = $path['basedir'] . '/ag_images/' . end($image);
+			if (file_exists($image)) {
+				unlink($image);
+			}
+		}
+	}
+}
+add_action('wp_ajax_auto_generator_clear_all', 'auto_generator_clear_all');
+
 function auto_generator_csv_multiply() {
 	if (isset($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
 		$id = trim($_REQUEST['id']);
@@ -570,15 +592,27 @@ function auto_generator_csv_multiply() {
 		}
 		$path = wp_upload_dir();
 
-		$csv = "title;url" . PHP_EOL;
+		$urls = array();
 		foreach ($settings as $s) {
+			$name = $s->name;
 			$s->name = str_replace(array('?', '[auto]', ' '), array('', '*', '_'), $s->name);
-			foreach (glob($path['basedir'] . "/ag_json/$s->name*.json") as $file) {
-				$file = file_get_contents($file);
+			foreach (glob($path['basedir'] . "/ag_json/$s->name*.json") as $filePath) {
+				$file = file_get_contents($filePath);
 				$file = json_decode($file);
+
+				$file->url = str_replace('!', '', $file->url);
+				file_put_contents(json_encode($file), $filePath);
+
 				$file->url = $file->url[strlen($file->url) - 1] != '/' ? $file->url . '/' : $file->url;
-				$csv .= "{$file->title};{$file->url}" . PHP_EOL;
+				$urls[$file->title] = $file->url;
 			}
+			if (stripos($s->name, '!') !== false) {
+				$wpdb->update($settings_table, ['name' => str_replace('!', '', $name)], ['id' => $id]);
+			}
+		}
+		$csv = "title;url" . PHP_EOL;
+		foreach ($urls as $title => $url) {
+			$csv .= "$title;$url" . PHP_EOL;
 		}
 		$file = $path['basedir'] . '/part' . $id . '.csv';
 		file_put_contents($file, $csv);
@@ -606,7 +640,7 @@ function auto_generator_import_multiply() {
 					continue;
 				}
 				$id = (int) $data[0];
-				$name = sanitize_text_field($data[1]);
+				$name = str_replace(array('?', '!'), array('', ''), sanitize_text_field($data[1]));
 				$name = strpos($data[1], '[auto]') === FALSE ? $name . ' [auto]' : $name;
 
 				$settings = new stdClass();

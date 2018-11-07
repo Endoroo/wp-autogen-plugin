@@ -110,8 +110,8 @@ if (!$data) {
 								$name2 = $mark . ' ' . $model . ' ' . $body;
 								if (stripos($name, $name2) !== FALSE) {
 									preg_match_all($pattern, $name2, $patterns);
-									$name = str_replace($patterns[0], '', $name2);
-									preg_match('/(\d{4})\-(\d{4}|нв)/', $patterns[0], $gates);
+									$name = str_replace($patterns[0][0], '', $name2);
+									preg_match('/(\d{4})\-(\d{4}|нв)/', $patterns[0][0], $gates);
 									if (count($gates) != 3) {
 										continue;
 									}

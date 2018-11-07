@@ -145,6 +145,25 @@ function init() {
     })
   });
 
+  // Clear folders
+  jQuery('.clear-all').on('click', function (e) {
+    jQuery('#wpcontent').prepend('<div class="loader"></div>');
+    e.preventDefault();
+    jQuery.post(ajaxurl, 'action=auto_generator_clear_all').done(function (res) {
+      res = jQuery.parseJSON(res);
+      if (res.message) {
+        var mes = jQuery('#message');
+        mes.find('p').text(res.message);
+        mes.show();
+        mes.find('button').off('click');
+        mes.find('button').on('click', function () {
+          mes.hide()
+        });
+      }
+      jQuery('.loader').remove();
+    })
+  });
+
   // Generate csv mark & model
   jQuery('.csv-multiply').on('click', function (e) {
     jQuery('#wpcontent').prepend('<div class="loader"></div>');

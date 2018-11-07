@@ -50,6 +50,10 @@
                     <option value="4">Марки-модели с переводом</option>
                     <option value="5">Марки-модели-поколения с переводом</option>
                 </select></div>
+            <div><label style="display:inline-block;width:160px">Очистить все
+                    страницы</label><input type="submit"
+                                           class="button action clear-all"
+                                           value="Выгрузить"/></div>
         </div>
         <div id="multiply-list">
             <div class="pager tablesorterPager">
