@@ -11,12 +11,11 @@ $header = implode('',$header);
 echo $header;
 
 $realName = explode('/', $_SERVER['REQUEST_URI']);
-$realName = end($realName);
+$realName = !empty($realName[count($realName) - 1]) ? $realName[count($realName) - 1] : $realName[count($realName) - 2];
 if ($realName != $auto_generator_name) {
 	$auto_generator_name = $realName;
 }
 $data = auto_generator_get_data($auto_generator_id, urldecode($auto_generator_name));
-
 if (!$data) {
 	global $wp_query;
 	$wp_query->set_404();
@@ -80,8 +79,8 @@ if (!$data) {
 					$listRu = json_decode($listRu, 1);
 					$pattern = '/\s*\(\d{4}(\-|–)(\d{4}|нв)\)/';
 
-                    $elements = array();
-                    if (isset($list[$name])) {
+					$elements = array();
+					if (isset($list[$name])) {
 						foreach ($list[$name] as $model => $bodies) {
 							$element = $model . ' (' . implode(', ', $bodies) . ')';
 							$element = preg_replace($pattern, '', $element);
@@ -89,21 +88,21 @@ if (!$data) {
 							$elements[] = $element;
 						}
 					}
-                    $text = implode(', ', $elements);
+					$text = implode(', ', $elements);
 
-                    $generations = array();
-                    foreach ($list as $mark => $models) {
-                        foreach ($models as $model => $bodies) {
-                            $cut = $mark . ' ' . $model;
-                            if ($cut != $name) continue;
-                            foreach ($bodies as $body) {
+					$generations = array();
+					foreach ($list as $mark => $models) {
+						foreach ($models as $model => $bodies) {
+							$cut = $mark . ' ' . $model;
+							if ($cut != $name) continue;
+							foreach ($bodies as $body) {
 								$generations[] = preg_replace($pattern, '', $body);
 							}
-                        }
-                    }
-                    $generations = implode(', ', $generations);
+						}
+					}
+					$generations = implode(', ', $generations);
 
-                    $years = array();
+					$years = array();
 					foreach ($list as $mark => $models) {
 						foreach ($models as $model => $bodies) {
 							foreach ($bodies as $body) {
@@ -150,8 +149,8 @@ if (!$data) {
 									$name2 = $mark . ' ' . $model . ' ' . $body;
 									if (stripos($name2, $name) !== FALSE) {
 										preg_match_all($pattern, $name2, $patterns);
-										$name = str_replace($patterns[0], '', $name2);
-										preg_match('/(\d{4})\-(\d{4}|нв)/', $patterns[0], $gates);
+										$name = str_replace($patterns[0][0], '', $name2);
+										preg_match('/(\d{4})\-(\d{4}|нв)/', $patterns[0][0], $gates);
 										if (count($gates) != 3) {
 											continue;
 										}

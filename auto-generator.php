@@ -600,14 +600,16 @@ function auto_generator_csv_multiply() {
 				$file = file_get_contents($filePath);
 				$file = json_decode($file);
 
-				$file->url = str_replace('!', '', $file->url);
+				$file->url = explode('/', $file->url);
+				$file->url[count($file->url) - 1] = str_replace(array('!', ',', '.'), array('', '', ''), end($file->url));
+				$file->url = implode('/', $file->url);
 				file_put_contents(json_encode($file), $filePath);
 
 				$file->url = $file->url[strlen($file->url) - 1] != '/' ? $file->url . '/' : $file->url;
 				$urls[$file->title] = $file->url;
 			}
 			if (stripos($s->name, '!') !== false) {
-				$wpdb->update($settings_table, ['name' => str_replace('!', '', $name)], ['id' => $id]);
+				$wpdb->update($settings_table, ['name' => str_replace(array('!', ',', '.'), array('', '', ''), $name)], ['id' => $id]);
 			}
 		}
 		$csv = "title;url" . PHP_EOL;
@@ -640,7 +642,7 @@ function auto_generator_import_multiply() {
 					continue;
 				}
 				$id = (int) $data[0];
-				$name = str_replace(array('?', '!'), array('', ''), sanitize_text_field($data[1]));
+				$name = str_replace(array('?', '!', '.', ','), array('', '', '',''), sanitize_text_field($data[1]));
 				$name = strpos($data[1], '[auto]') === FALSE ? $name . ' [auto]' : $name;
 
 				$settings = new stdClass();
