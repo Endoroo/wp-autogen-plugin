@@ -528,7 +528,7 @@ function auto_generator_clear_multiply() {
 
 		$count = 0;
 		$path = wp_upload_dir();
-		$s->name = str_replace(' [auto]', '*', $s->name);
+		$s->name = str_replace(array(' [auto]', '?', ''), array('*', '', '_'), $s->name);
 		foreach (glob($path['basedir'] . '/ag_json/' . $s->name . '.json') as $file) {
 			$content = file_get_contents($file);
 			if (file_exists($file)) {
