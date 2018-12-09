@@ -218,9 +218,11 @@ if (!$data) {
 
 <?php
 $path = wp_upload_dir();
-$path = $path['basedir'] . '/ag_json';
-$files = scandir($path);
-$files = array_slice($files, 2, count($files));
+$search = $path['basedir'] . '/ag_json/*/*.json';
+$files = glob($search);
+foreach ($files as $key => $file) {
+	$files[$key] = str_replace($path['basedir'] . '/ag_json/', '', $file);
+}
 
 if (!get_option('auto_catalog_ids') || (strtotime("-21 day") > get_option('auto_catalog_time'))) {
 	$ids = range(0, count($files));
@@ -229,6 +231,7 @@ if (!get_option('auto_catalog_ids') || (strtotime("-21 day") > get_option('auto_
 	update_option('auto_catalog_ids', $ids);
 	update_option('auto_catalog_time', time());
 }
+$path = $path['basedir'] . '/ag_json/';
 
 $ids = get_option('auto_catalog_ids', '0');
 $ids = explode(',', $ids);
@@ -236,8 +239,8 @@ $key = array_search($data->title . '.json', $files);
 $prev = isset($ids[$key - 1]) ? $ids[$key - 1] : $ids[$key + 2];
 $next = isset($ids[$key + 1]) ? $ids[$key + 1] : $ids[$key - 2];
 
-$prev = json_decode(file_get_contents($path . '/' . $files[$prev]));
-$next = json_decode(file_get_contents($path . '/' . $files[$next])); ?>
+$prev = json_decode(file_get_contents($path . $files[$prev]));
+$next = json_decode(file_get_contents($path . $files[$next])); ?>
 
     <div class="re-link">
         <div>

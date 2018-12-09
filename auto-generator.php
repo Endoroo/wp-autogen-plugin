@@ -102,13 +102,13 @@ function auto_generator_get_data($id, $name) {
 
 	$path = wp_upload_dir();
 	$name = str_replace(' ', '_', $name);
-	$path = $path['basedir'] . '/ag_json/' . $name . '.json';
+	$path = $path['basedir'] . '/ag_json/' . $id . '/' . $name . '.json';
 	if (file_exists($path) && is_numeric($id)) {
 		$data = json_decode(file_get_contents($path));
 		global $wpdb;
 		$settings_table = get_option('auto_catalog_table');
 		$id = (int)$id;
-		$result = $wpdb->get_col("SELECT name FROM $settings_table WHERE id =$id");
+		$result = $wpdb->get_col("SELECT name FROM $settings_table WHERE id = $id");
 		$multiple = reset($result);
 		$multiple = explode('[auto]', $multiple);
 		$name = $data->title;
@@ -442,6 +442,14 @@ function auto_generator_generate_multiply() {
 
 			// generation loop
 			foreach ($settings as $item) {
+				if (!file_exists($path['basedir'] . '/ag_images/' . $item->id)) {
+					wp_mkdir_p($path['basedir'] . '/ag_images/' . $item->id);
+				}
+				// prepare json gen
+				if (!file_exists($path['basedir'] . '/ag_json/' . $item->id)) {
+					wp_mkdir_p($path['basedir'] . '/ag_json/' . $item->id);
+				}
+
 				$s = json_decode($item->settings);
 				$price1 = range($s->price_from_1, $s->price_to_1, $s->price_step_1);
 				$price2 = range($s->price_from_2, $s->price_to_2, $s->price_step_2);
@@ -488,14 +496,14 @@ function auto_generator_generate_multiply() {
 						$id = get_attached_file($key);
 						$ext = explode('.', $id);
 						$ext = end($ext);
-						$base = '/ag_images/' . $title . '-' . $key . str_pad(mt_rand(0, 99999999), 8, STR_PAD_BOTH) . '.' . $ext;
+						$base = '/ag_images/' . $item->id . '/' . $title . '-' . $key . str_pad(mt_rand(0, 99999999), 8, STR_PAD_BOTH) . '.' . $ext;
 						$file = $path['basedir'] . $base;
 						$files[] = $path['baseurl'] . $base;
 						symlink($id, $file);
 					}
 					$post['images'] = $files;
 					file_put_contents(
-						$path['basedir'] . '/ag_json/' . $title . '.json',
+						$path['basedir'] . '/ag_json/' . $item->id . '/' . $title . '.json',
 						json_encode($post)
 					);
 					$count++;
@@ -520,31 +528,35 @@ add_action('wp_ajax_auto_generator_generate_multiply', 'auto_generator_generate_
 function auto_generator_clear_multiply() {
 	if (isset($_REQUEST['id'])) {
 		$id = is_numeric($_REQUEST['id']) ? $_REQUEST['id'] : 0;
+		$where = !$id ? '' : ' WHERE id = ' . (int)$id;
 
 		global $wpdb;
 		$settings_table = get_option('auto_catalog_table');
-		$settings = $wpdb->get_results($wpdb->prepare("SELECT * FROM $settings_table WHERE id = %d", $id));
-		$s = array_shift($settings);
+		$settings = $wpdb->get_results("SELECT * FROM $settings_table$where");
 
 		$count = 0;
 		$path = wp_upload_dir();
-		$s->name = str_replace(array(' [auto]', '?', ''), array('*', '', '_'), $s->name);
-		foreach (glob($path['basedir'] . '/ag_json/' . $s->name . '.json') as $file) {
-			$content = file_get_contents($file);
-			if (file_exists($file)) {
-				unlink($file);
-				$count++;
-			}
-			$content = json_decode($content);
-			$images = $content->images;
+		foreach ($settings as $s) {
+			$s->name = str_replace(array(' [auto]', '?', ''), array('*', '', '_'), $s->name);
+			foreach (glob($path['basedir'] . '/ag_json/' . $s->id . '/' . $s->name . '.json') as $file) {
+				$content = file_get_contents($file);
+				if (file_exists($file)) {
+					unlink($file);
+					$count++;
+				}
+				$content = json_decode($content);
+				$images = $content->images;
 
-			foreach ($images as $image) {
-				$image = explode('ag_images/',$image);
-				$image = $path['basedir'] . '/ag_images/' . end($image);
-				if (file_exists($image)) {
-					unlink($image);
+				foreach ($images as $image) {
+					$image = explode('ag_images/', $image);
+					$image = $path['basedir'] . '/ag_images/' . end($image);
+					if (file_exists($image)) {
+						unlink($image);
+					}
 				}
 			}
+			rmdir($path['basedir'] . '/ag_json/' . $s->id);
+			rmdir($path['basedir'] . '/ag_images/' . $s->id);
 		}
 
 		echo json_encode(['message' => $count ? 'Удаление запчастей(' . $count . ') прошло успешно' : 'Удалять больше нечего']);
@@ -559,22 +571,31 @@ add_action('wp_ajax_auto_generator_clear_multiply', 'auto_generator_clear_multip
 
 function auto_generator_clear_all() {
 	$path = wp_upload_dir();
-	foreach (glob($path['basedir'] . '/ag_json/*.json') as $file) {
-		$content = file_get_contents($file);
-		if (file_exists($file)) {
-			unlink($file);
-		}
-		$content = json_decode($content);
-		$images = $content->images;
 
-		foreach ($images as $image) {
-			$image = explode('ag_images/',$image);
-			$image = $path['basedir'] . '/ag_images/' . end($image);
-			if (file_exists($image)) {
-				unlink($image);
+	global $wpdb;
+	$settings_table = get_option('auto_catalog_table');
+	$settings = $wpdb->get_results("SELECT * FROM $settings_table");
+	foreach ($settings as $s) {
+
+		foreach (glob($path['basedir'] . '/ag_json/' . $s->id . '/*.json') as $file) {
+			$content = file_get_contents($file);
+			if (file_exists($file)) {
+				unlink($file);
+			}
+			$content = json_decode($content);
+			$images = $content->images;
+
+			foreach ($images as $image) {
+				$image = explode('ag_images/',$image);
+				$image = $path['basedir'] . '/ag_images/' . end($image);
+				if (file_exists($image)) {
+					unlink($image);
+				}
 			}
 		}
 	}
+	rmdir($path['basedir'] . '/ag_json');
+	rmdir($path['basedir'] . '/ag_images');
 }
 add_action('wp_ajax_auto_generator_clear_all', 'auto_generator_clear_all');
 
@@ -596,7 +617,7 @@ function auto_generator_csv_multiply() {
 		foreach ($settings as $s) {
 			$name = $s->name;
 			$s->name = str_replace(array('?', '[auto]', ' '), array('', '*', '_'), $s->name);
-			foreach (glob($path['basedir'] . "/ag_json/$s->name*.json") as $filePath) {
+			foreach (glob($path['basedir'] . "/ag_json/$s->id/$s->name*.json") as $filePath) {
 				$file = file_get_contents($filePath);
 				$file = json_decode($file);
 
