@@ -108,14 +108,17 @@ function auto_generator_get_data($id, $name) {
 		global $wpdb;
 		$settings_table = get_option('auto_catalog_table');
 		$id = (int)$id;
-		$result = $wpdb->get_col("SELECT name FROM $settings_table WHERE id = $id");
-		$multiple = reset($result);
+		$result = $wpdb->get_results("SELECT name,settings FROM $settings_table WHERE id = $id");
+		$result = reset($result);
+		$multiple = $result->name;
+		$settings = json_decode($result->settings);
 		$multiple = explode('[auto]', $multiple);
 		$name = $data->title;
 		foreach ($multiple as $m) {
 			$name = str_replace($m, '', $name);
 		}
-		$data->multiple = reset($result);
+		$data->multiple = $result->name;
+		$data->price_word = isset($settings->price_word) ? $settings->price_word : "";
 		$data->auto = $name;
 		return $data;
 	}
@@ -292,6 +295,7 @@ function auto_generator_save_multiply() {
 		$settings->price_to_2 = trim($_REQUEST['price-to'][1]);
 		$settings->price_step_1 = trim($_REQUEST['price-step'][0]);
 		$settings->price_step_2 = trim($_REQUEST['price-step'][1]);
+		$settings->price_word = (int) !empty($_REQUEST['price-word']);
 		$settings->date_from = trim($_REQUEST['date-from']);
 		$settings->date_to = trim($_REQUEST['date-to']);
 		$settings->keywords = trim($_REQUEST['keywords']);
@@ -476,6 +480,7 @@ function auto_generator_generate_multiply() {
 							break;
 						}
 					}
+
 					$post = array(
 						'title' => $title,
 						'multiple' => $item->name,

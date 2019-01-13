@@ -61,6 +61,9 @@ function init() {
         jQuery('#description').val(settings.description);
         jQuery('#text-before').val(settings.text_before);
         jQuery('#text-after').val(settings.text_after);
+        if (settings.price_word) {
+          jQuery('#price-word').attr("checked", 1);
+        }
         jQuery('#template').val(settings.template);
 
         if (settings.images) {

@@ -154,6 +154,7 @@
                 <input type="text" name="price-to[]" id="price-to-2"/>
                 <label for="price-step-2">Шаг</label>
                 <input type="text" name="price-step[]" id="price-step-2"/>
+                <div style="margin-top:10px;"><label for="price-word">Использовать слова вместо цифр</label><input type="checkbox" name="price-word" id="price-word" style="height:16px;margin-top:2px;width:16px;" value="1"/></div>
             </div>
 
             <h2>Даты</h2>

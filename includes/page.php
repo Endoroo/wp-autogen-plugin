@@ -1,4 +1,5 @@
 <?php
+// remove all-in-one-seo tags
 global $aioseop_options;
 if (isset($aioseop_options['aiosp_force_rewrites'])) {
 	if ($aioseop_options['aiosp_force_rewrites']) {
@@ -29,7 +30,46 @@ if (!$data) {
 	status_header(404);
 	get_template_part(404);
 	exit();
-}; ?>
+};
+
+$price_word = array(
+    "Уточняйте! *",
+    "Узнавайте по телефону! *",
+    "По телефону! *",
+    "Звоните! *",
+    "Уточняйте у менеджеров! *",
+    "Уточняйте по телефону! *",
+    "Точные цены по телефону! *",
+    "Обращайтесь! *",
+    "Уточняйте, действуют скидки! *",
+    "Точные цены по обращению! *",
+);
+
+$path = wp_upload_dir();
+$search = $path['basedir'] . '/ag_json/*/*.json';
+$files = glob($search);
+foreach ($files as $key => $file) {
+	$files[$key] = str_replace($path['basedir'] . '/ag_json/', '', $file);
+}
+
+if (!get_option('auto_catalog_ids') || (strtotime("-21 day") > get_option('auto_catalog_time'))) {
+	$ids = range(0, count($files));
+	shuffle($ids);
+	$ids = implode(',', $ids);
+	update_option('auto_catalog_ids', $ids);
+	update_option('auto_catalog_time', time());
+}
+$path = $path['basedir'] . '/ag_json/';
+
+$ids = get_option('auto_catalog_ids', '0');
+$ids = explode(',', $ids);
+$key = array_search($data->title . '.json', $files);
+$prev = isset($ids[$key - 1]) ? $ids[$key - 1] : $ids[$key + 2];
+$next = isset($ids[$key + 1]) ? $ids[$key + 1] : $ids[$key - 2];
+
+$prev = json_decode(file_get_contents($path . $files[$prev]));
+$next = json_decode(file_get_contents($path . $files[$next]));
+?>
     <style>h1 {padding: 20px 0}
         .images a {display: inline-block}
         .images a.main {vertical-align: top}
@@ -70,8 +110,7 @@ if (!$data) {
     <div class="flex <?php echo $data->template ?: 'tpl2' ?>">
         <div class="part-content">
             <div class="price">
-                <strong>Цена: </strong><span><?php echo $data->price ?>
-                    руб.</span></div>
+                <strong>Цена: </strong><span><?php echo $data->price_word ? $price_word[$key % count($price_word)] : $data->price . ' руб.' ?></span></div>
             <div class="text">
                 <p><?php
 					$multiple = explode('[auto]', $data->multiple);
@@ -222,32 +261,6 @@ if (!$data) {
 
     <div class="art"><strong>Артикул</strong>: <?php echo $data->art; ?></div>
     <div class="art"><?php echo date('d.m.Y    H:i:s', $data->date); ?></div>
-
-<?php
-$path = wp_upload_dir();
-$search = $path['basedir'] . '/ag_json/*/*.json';
-$files = glob($search);
-foreach ($files as $key => $file) {
-	$files[$key] = str_replace($path['basedir'] . '/ag_json/', '', $file);
-}
-
-if (!get_option('auto_catalog_ids') || (strtotime("-21 day") > get_option('auto_catalog_time'))) {
-	$ids = range(0, count($files));
-	shuffle($ids);
-	$ids = implode(',', $ids);
-	update_option('auto_catalog_ids', $ids);
-	update_option('auto_catalog_time', time());
-}
-$path = $path['basedir'] . '/ag_json/';
-
-$ids = get_option('auto_catalog_ids', '0');
-$ids = explode(',', $ids);
-$key = array_search($data->title . '.json', $files);
-$prev = isset($ids[$key - 1]) ? $ids[$key - 1] : $ids[$key + 2];
-$next = isset($ids[$key + 1]) ? $ids[$key + 1] : $ids[$key - 2];
-
-$prev = json_decode(file_get_contents($path . $files[$prev]));
-$next = json_decode(file_get_contents($path . $files[$next])); ?>
 
     <div class="re-link">
         <div>
