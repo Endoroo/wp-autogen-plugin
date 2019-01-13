@@ -1,5 +1,12 @@
 <?php
-// remove all-in-one-seo tags
+global $aioseop_options;
+if (isset($aioseop_options['aiosp_force_rewrites'])) {
+	if ($aioseop_options['aiosp_force_rewrites']) {
+		ob_end_flush();
+	} else {
+	    remove_all_filters('wp_title');
+    }
+}
 ob_start();
 get_header();
 $header = ob_get_contents();
