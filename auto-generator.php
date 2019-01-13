@@ -194,7 +194,7 @@ function auto_generator_add_multiply() {
 
 		$value = strpos($value, '[auto]') === FALSE ? $value . ' [auto]' : $value;
 		$wpdb->insert($settings_table, [
-			'name' => str_replace(array('?', '!'), array('', ''), $value)
+			'name' => str_replace(array('?', '!', ',', '.', ' '), array('', '', '', '', '_'), $value)
 		]);
 		$result = $wpdb->get_var("SELECT COUNT(*) FROM $settings_table;");
 		echo json_encode([
@@ -487,11 +487,11 @@ function auto_generator_generate_multiply() {
 						'template' => $s->template,
 						'art' => $art,
 						'date' => mt_rand(strtotime($s->date_from), strtotime($s->date_to)),
-						'url' => (get_site_url() . "/$item->id/" . str_replace(array('?', '!', ' '), array('', '', '_'), $title)) . '/'
+						'url' => (get_site_url() . "/$item->id/" . str_replace(array('?', '!', ',', '.', ' '), array('', '', '', '', '_'), $title)) . '/'
 					);
 
 					$files = array();
-					$title = str_replace(array('?', '!', ' '), array('', '', '_'), $title);
+					$title = str_replace(array('?', '!', ',', '.', ' '), array('', '', '', '', '_'), $title);
 					foreach ($s->images as $key => $id) {
 						$id = get_attached_file($key);
 						$ext = explode('.', $id);
@@ -537,7 +537,7 @@ function auto_generator_clear_multiply() {
 		$count = 0;
 		$path = wp_upload_dir();
 		foreach ($settings as $s) {
-			$s->name = str_replace(array(' [auto]', '?', ''), array('*', '', '_'), $s->name);
+			$s->name = str_replace(array(' [auto]', '?', ' '), array('*', '', '_'), $s->name);
 			foreach (glob($path['basedir'] . '/ag_json/' . $s->id . '/' . $s->name . '.json') as $file) {
 				$content = file_get_contents($file);
 				if (file_exists($file)) {
