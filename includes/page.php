@@ -1,4 +1,18 @@
 <?php
+$realName = explode('/', $_SERVER['REQUEST_URI']);
+$realName = !empty($realName[count($realName) - 1]) ? $realName[count($realName) - 1] : $realName[count($realName) - 2];
+if ($realName != $auto_generator_name) {
+	$auto_generator_name = $realName;
+}
+$data = auto_generator_get_data($auto_generator_id, urldecode($auto_generator_name));
+if (!$data) {
+	global $wp_query;
+	$wp_query->set_404();
+	status_header(404);
+	get_template_part(404);
+	exit();
+};
+
 // remove all-in-one-seo tags
 global $aioseop_options;
 if (isset($aioseop_options['aiosp_force_rewrites'])) {
@@ -17,20 +31,6 @@ $header[0] = preg_split('/<!\-\-\s*/', $header[0]);
 $header[0] = $header[0][0];
 $header = implode('',$header);
 echo $header;
-
-$realName = explode('/', $_SERVER['REQUEST_URI']);
-$realName = !empty($realName[count($realName) - 1]) ? $realName[count($realName) - 1] : $realName[count($realName) - 2];
-if ($realName != $auto_generator_name) {
-	$auto_generator_name = $realName;
-}
-$data = auto_generator_get_data($auto_generator_id, urldecode($auto_generator_name));
-if (!$data) {
-	global $wp_query;
-	$wp_query->set_404();
-	status_header(404);
-	get_template_part(404);
-	exit();
-};
 
 $price_word = array(
     "Уточняйте! *",
@@ -63,9 +63,9 @@ $path = $path['basedir'] . '/ag_json/';
 
 $ids = get_option('auto_catalog_ids', '0');
 $ids = explode(',', $ids);
-$key = array_search($data->title . '.json', $files);
-$prev = isset($ids[$key - 1]) ? $ids[$key - 1] : $ids[$key + 2];
-$next = isset($ids[$key + 1]) ? $ids[$key + 1] : $ids[$key - 2];
+$key = array_search($auto_generator_id . '/' . str_replace(array('?', '!', ',', '.', ' '), array('', '', '', '', '_'), $data->title) . '.json', $files);
+$prevData = isset($ids[$key - 1]) ? $ids[$key - 1] : $ids[$key + 2];
+$nextData = isset($ids[$key + 1]) ? $ids[$key + 1] : $ids[$key - 2];
 
 $prev = json_decode(file_get_contents($path . $files[$prev]));
 $next = json_decode(file_get_contents($path . $files[$next]));
@@ -102,6 +102,7 @@ $next = json_decode(file_get_contents($path . $files[$next]));
         .hide {display: none}
         @media (max-width: 824px) {
             .tpl2 .images div.im-bottom a {width: auto}
+            .text > p {padding-right: 1rem;width: 100%;}
         }
         .art {margin: 15px 0 40px}
         .re-link {display: flex}
@@ -264,10 +265,10 @@ $next = json_decode(file_get_contents($path . $files[$next]));
 
     <div class="re-link">
         <div>
-            <a href="<?php echo get_site_url(); ?>/<?php echo $auto_generator_id ?>/<?php echo str_replace(' ', '_', $prev->title); ?>"><?php echo $prev->title ?></a>
+            <a href="<?php echo get_site_url(); ?>/<?php echo str_replace('.json', '', $files[$prev]); ?>"><?php echo $prevData->title ?></a>
         </div>
         <div style="text-align:right"><a
-                    href="<?php echo get_site_url(); ?>/<?php echo $auto_generator_id ?>/<?php echo str_replace(' ', '_', $next->title); ?>"><?php echo $next->title ?></a>
+                    href="<?php echo get_site_url(); ?>/<?php echo str_replace('.json', '', $files[$next]); ?>"><?php echo $nextData->title ?></a>
         </div>
     </div>
 
