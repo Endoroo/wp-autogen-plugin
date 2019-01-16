@@ -135,6 +135,7 @@
 			}
 			?></div>
         <form action="#" method="post" class="upload_image"></form>
+        <button id="change-images" class="wp-core-ui button">Заменить картинки</button>
     </div>
     <div class="part-right">
         <form action="#" method="post" id="multiply-params">

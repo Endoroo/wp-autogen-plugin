@@ -713,3 +713,78 @@ function auto_generator_import_multiply() {
 }
 
 add_action('wp_ajax_auto_generator_import_multiply', 'auto_generator_import_multiply');
+
+function auto_generator_change_image() {
+	if (isset($_REQUEST['id']) && isset($_REQUEST['ids']) && isset($_REQUEST['images'])) {
+		$genId = sanitize_text_field($_REQUEST['id']);
+		$genId = explode(',', $genId);
+		$ids = $_REQUEST['ids'];
+		$images = $_REQUEST['images'];
+
+		if (!is_array($genId) || (is_array($genId) && !count($genId))
+			|| !is_array($ids) || (is_array($ids) && !count($ids))
+			|| !is_array($images) || (is_array($images) && !count($images))) {
+			echo json_encode(['message' => 'Произошла ошибка при замене картинок']);
+			wp_die();
+		}
+
+		global $wpdb;
+		$settings_table = get_option('auto_catalog_table');
+		$path = wp_upload_dir();
+		$count = 0;
+		foreach ($genId as $id) {
+			$settings = $wpdb->get_results("SELECT * FROM $settings_table WHERE id = $id");
+			$settings = reset($settings);
+			$settings->settings = json_decode($settings->settings);
+
+			$settings->settings->images = array();
+			foreach ($ids as $key => $imageId) {
+				if (is_numeric($imageId)) {
+					$settings->settings->images[$id] = $images[$key];
+				}
+			}
+
+			$settings->images = $images;
+			$wpdb->update($settings_table, ['settings' => json_encode($settings)], ['id' => $id]);
+
+			$search = $path['basedir'] . "/ag_json/$id/*.json";
+			$files = glob($search);
+
+			foreach ($files as $file) {
+				$post = json_decode(file_get_contents($file));
+
+				foreach ($post->images as $image) {
+					$image = explode('ag_images/', $image);
+					$image = $path['basedir'] . '/ag_images/' . end($image);
+					if (file_exists($image)) {
+						unlink($image);
+					}
+				}
+
+				$post->images = array();
+
+				$title = str_replace(array('?', '!', ',', '.', ' '), array('', '', '', '', '_'), $post->title);
+				foreach ($ids as $key => $imageId) {
+					$image = get_attached_file($imageId);
+					$ext = explode('.', $image);
+					$ext = end($ext);
+					$base = '/ag_images/' . $id . '/' . $title . '-' . $key . str_pad(mt_rand(0, 9999999999), 10, STR_PAD_BOTH) . '.' . $ext;
+					$source = $path['basedir'] . $base;
+					$post->images[] = $path['baseurl'] . $base;
+					symlink($image, $source);
+				}
+
+				file_put_contents(
+					$file,
+					json_encode($post)
+				);
+				$count++;
+			}
+		}
+		echo json_encode(['message' => $count ? "Замена картинок у $count запчастей прошло успешно" : "Ничего не заменилось"]);
+		wp_die();
+	}
+	echo json_encode(['message' => "Ошибка входных параметров"]);
+	wp_die();
+}
+add_action('wp_ajax_auto_generator_change_image', 'auto_generator_change_image');

@@ -288,6 +288,28 @@ jQuery(document).ready(function () {
     })
   });
 
+  jQuery('#change-images').on('click', function () {
+    jQuery('#wpcontent').prepend('<div class="loader"></div>');
+    var id = [];
+    jQuery('input[name="multiply-ids[]"]:checked').each(function () {
+      id.push(jQuery(this).val());
+    });
+    jQuery.post(ajaxurl, 'action=auto_generator_change_image&id=' + id
+        + '&' + jQuery('.upload_image').serialize()).done(function (res) {
+      res = jQuery.parseJSON(res);
+      if (res.message) {
+        var mes = jQuery('#message');
+        mes.find('p').text(res.message);
+        mes.show();
+        mes.find('button').off('click');
+        mes.find('button').on('click', function () {
+          mes.hide()
+        });
+      }
+      jQuery('.loader').remove();
+    })
+  });
+
   init()
 });
 
