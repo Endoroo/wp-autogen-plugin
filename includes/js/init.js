@@ -310,6 +310,12 @@ jQuery(document).ready(function () {
     })
   });
 
+  jQuery('#rows-import-action').on('click', function () {
+    jQuery.post(ajaxurl, 'action=auto_generator_import_csv&csv='
+        + jQuery('#rows-import').val()).done(function (res) {
+    })
+  });
+
   init()
 });
 

@@ -27,14 +27,6 @@
             <input type="submit" class="button action" value="Добавить"/>
         </form>
         <div>
-			<?php
-			$path = plugin_dir_path(__FILE__);
-			if (file_exists($path . '/../auto_generator.csv')) : ?>
-                <div>
-                    <label style="display:inline-block;width:160px">Импорт</label>
-                    <input type="submit" class="button action import-all"
-                           value="Импорт"/></div>
-			<?php endif; ?>
             <div><label style="display:inline-block;width:160px">Выгрузить все
                     страницы</label><input type="submit"
                                            class="button action csv-all"
@@ -184,5 +176,23 @@
             </div>
             <input type="submit" class="button action" value="Сохранить"/>
         </form>
+    </div>
+    <div class="block">
+        <h2>Импорт</h2>
+        <div class="content">
+            <?php
+            $path = plugin_dir_path(__FILE__);
+            if (file_exists($path . '/../auto_generator.csv')) : ?>
+                <div>
+                    <label style="display:inline-block;width:160px">Импорт из файла</label>
+                    <input type="submit" class="button action import-all"
+                           value="Импорт"/></div>
+            <?php endif; ?>
+            <div>
+                <label for="rows-import">Импорт из csv (разделитель ячеек - |)</label>
+                <textarea id="rows-import" rows="10"></textarea>
+                <button id="rows-import-action" class="wp-core-ui button">Импортировать</button>
+            </div>
+        </div>
     </div>
 </div>

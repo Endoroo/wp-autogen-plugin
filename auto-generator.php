@@ -714,6 +714,65 @@ function auto_generator_import_multiply() {
 
 add_action('wp_ajax_auto_generator_import_multiply', 'auto_generator_import_multiply');
 
+function auto_generator_import_csv() {
+
+    if (isset($_REQUEST['csv'])) {
+        $csv = trim(sanitize_textarea_field($_REQUEST['csv']));
+        $csv = preg_split('/[\R\n\r]+/', $csv);
+
+        global $wpdb;
+        $settings_table = get_option('auto_catalog_table');
+
+        $count = 0;
+        foreach ($csv as $row) {
+            $row = explode('|', $row);
+            if (count($row) < 2) continue;
+
+            $id = (int) $row[0];
+            $name = str_replace(array('?', '!', '.', ','), array('', '', '',''), sanitize_text_field($row[1]));
+            $name = strpos($row[1], '[auto]') === FALSE ? $name . ' [auto]' : $name;
+            $settings = new stdClass();
+            $price = preg_split('/[\-—]+/', $row[2]);
+            if (count($price) < 2) {
+                continue;
+            }
+            $settings->price_from_1 = trim($price[0]);
+            $settings->price_from_2 = trim($price[1]);
+            $price = preg_split('/[\-—]+/', $row[4]);
+            if (count($price) < 2) {
+                continue;
+            }
+            $settings->price_to_1 = trim($price[0]);
+            $settings->price_to_2 = trim($price[1]);
+            $settings->price_step_1 = trim($row[3]);
+            $settings->price_step_2 = trim($row[5]);
+            $settings->date_from = '01.01.' . date('Y', strtotime('-1 year')) . ' 00:00:00';
+            $settings->date_to = date('d.m.Y H:i:s');
+            $settings->keywords = '[title]';
+            $settings->description = explode('.', $row[7]);
+            $settings->description = trim(reset($settings->description));
+            $row[6] = $row[6][strlen($row[6]) - 1] != '.' ? trim($row[6]) . '.' : trim($row[6]);
+            $settings->text_before = trim($row['6'] . ' ' . $row[7]);
+            $settings->text_after = trim($row[8]);
+            $settings->template = '';
+
+            $count += (int)$wpdb->insert($settings_table, [
+                'id' => $id,
+                'name' => str_replace('?', '', $name),
+                'settings' => json_encode($settings),
+            ]);
+        }
+        echo json_encode(['message' => $count ? "Импортировано $count множителей." : "Ничего не импортировано."]);
+
+    }
+    else {
+        echo json_encode(['message' => 'Произошла ошибка при импорте']);
+    }
+    wp_die();
+}
+
+add_action('wp_ajax_auto_generator_import_csv', 'auto_generator_import_csv');
+
 function auto_generator_change_image() {
 	if (isset($_REQUEST['id']) && isset($_REQUEST['ids']) && isset($_REQUEST['images'])) {
 		$genId = sanitize_text_field($_REQUEST['id']);
