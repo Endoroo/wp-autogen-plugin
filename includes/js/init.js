@@ -313,6 +313,15 @@ jQuery(document).ready(function () {
   jQuery('#rows-import-action').on('click', function () {
     jQuery.post(ajaxurl, 'action=auto_generator_import_csv&csv='
         + jQuery('#rows-import').val()).done(function (res) {
+      if (res.message) {
+        var mes = jQuery('#message');
+        mes.find('p').text(res.message);
+        mes.show();
+        mes.find('button').off('click');
+        mes.find('button').on('click', function () {
+          mes.hide()
+        });
+      }
     })
   });
 
